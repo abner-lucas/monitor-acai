@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { 
   Map, 
   LayoutGrid, 
-  CalendarDays, 
   Info, 
   CheckCircle2, 
   Clock, 
@@ -32,7 +31,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
   onSelectPosition,
   onOpenRaffle,
 }) => {
-  const [viewMode, setViewMode] = useState<'schematic' | 'grid' | 'schedule'>('schematic');
+  const [viewMode, setViewMode] = useState<'schematic' | 'grid'>('schematic');
 
   const selectedPosition = POSITIONS_DATA.find((p) => p.id === selectedPositionId);
   const selectedPositionRecord = records.find(
@@ -155,17 +154,6 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
           >
             <LayoutGrid className="w-3.5 h-3.5 text-emerald-700" />
             <span>Grade de Células</span>
-          </button>
-          <button
-            onClick={() => setViewMode('schedule')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-              viewMode === 'schedule'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <CalendarDays className="w-3.5 h-3.5 text-emerald-700" />
-            <span>Cronograma (18 Posições)</span>
           </button>
         </div>
       </div>
@@ -451,6 +439,9 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                     {cellPositions.map((pos) => {
                       const status = getPositionStatusInCycle(pos.id, records, currentCycle);
                       const isSelected = selectedPositionId === pos.id;
+                      const posRecord = records.find(
+                        (r) => r.cycleNumber === currentCycle && r.positionId === pos.id
+                      );
 
                       return (
                         <div
@@ -472,7 +463,11 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                             </span>
                             <div>
                               <span className="font-semibold block">Planta {pos.plantIndex}</span>
-                              <span className="text-[10px] text-slate-500">Período: {pos.plannedDates}</span>
+                              <span className="text-[10px] text-slate-500">
+                                {status === 'active' && posRecord && `Instalado em ${formatDateBR(posRecord.installedAt)}`}
+                                {status === 'completed' && posRecord && `Coletado em ${formatDateBR(posRecord.removedAt || posRecord.installedAt)}`}
+                                {status === 'available' && 'Aguardando sorteio'}
+                              </span>
                             </div>
                           </div>
 
@@ -505,87 +500,6 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
           </div>
         )}
 
-        {/* VIEW 3: SCHEDULE TABLE (18 POSITIONS TIMELINE) */}
-        {viewMode === 'schedule' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border border-slate-200 rounded-xl overflow-hidden">
-              <thead className="bg-slate-50 text-slate-600 uppercase font-semibold border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3">Posição</th>
-                  <th className="py-3 px-3">Célula</th>
-                  <th className="py-3 px-3">Planta</th>
-                  <th className="py-3 px-3">Período Previsto (SAF Breves)</th>
-                  <th className="py-3 px-3">Status no Ciclo {currentCycle}</th>
-                  <th className="py-3 px-3">Último Registro</th>
-                  <th className="py-3 px-3 text-right">Ação</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {POSITIONS_DATA.map((pos) => {
-                  const status = getPositionStatusInCycle(pos.id, records, currentCycle);
-                  const record = records.find(
-                    (r) => r.cycleNumber === currentCycle && r.positionId === pos.id
-                  );
-
-                  return (
-                    <tr
-                      key={pos.id}
-                      className={`hover:bg-slate-50 transition-colors ${
-                        status === 'active' ? 'bg-emerald-50/40 font-medium' : ''
-                      }`}
-                    >
-                      <td className="py-2.5 px-3">
-                        <span className="inline-flex items-center justify-center w-7 h-7 font-mono font-bold bg-white border border-slate-200 rounded-lg text-slate-900 shadow-2xs">
-                          {pos.formattedId}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 font-semibold text-slate-800">Célula {pos.cellId}</td>
-                      <td className="py-2.5 px-3">Planta {pos.plantIndex}</td>
-                      <td className="py-2.5 px-3 font-mono text-slate-700">{pos.plannedDates}</td>
-                      <td className="py-2.5 px-3">
-                        {status === 'active' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
-                            Ativo em Campo
-                          </span>
-                        )}
-                        {status === 'completed' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                            <CheckCircle2 className="w-3 h-3 text-blue-600" />
-                            Concluído
-                          </span>
-                        )}
-                        {status === 'available' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                            Pendente / Disponível
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-600">
-                        {record ? (
-                          <span>
-                            {formatDateBR(record.installedAt)} ({record.responsible.split('/')[0]})
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 italic">Ainda não visitada</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <button
-                          onClick={() => onSelectPosition(pos.id)}
-                          className="px-2.5 py-1 text-[11px] font-medium text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors"
-                        >
-                          Ver Detalhes
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
         {/* Selected Position Detail Card */}
         {selectedPosition && (
           <div className="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -615,8 +529,9 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                   )}
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Cultivar: {selectedPosition.cultivar} • Cronograma Teórico: {selectedPosition.plannedDates}
+                  Célula {selectedPosition.cellId} ({CELLS_METADATA.find(c => c.id === selectedPosition.cellId)?.name}) • Planta {selectedPosition.plantIndex}
                   {selectedPositionRecord && ` • Instalado em: ${formatDateBR(selectedPositionRecord.installedAt)}`}
+                  {selectedPositionRecord?.removedAt && ` • Coletado em: ${formatDateBR(selectedPositionRecord.removedAt)}`}
                 </p>
               </div>
             </div>

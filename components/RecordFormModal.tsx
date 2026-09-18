@@ -229,7 +229,7 @@ const RecordFormModalContent: React.FC<ContentProps> = ({
           {currentPosInfo && (
             <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-center justify-between">
               <span>Célula {currentPosInfo.cellId} • Planta {currentPosInfo.plantIndex}</span>
-              <span className="text-slate-500">Cultivar: {currentPosInfo.cultivar.split('(')[0]}</span>
+              <span className="text-slate-500 font-mono">Posição #{currentPosInfo.formattedId}</span>
             </div>
           )}
 

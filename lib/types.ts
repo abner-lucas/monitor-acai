@@ -6,15 +6,11 @@ export interface PositionInfo {
   cellId: number; // 1 to 6
   plantIndex: number; // 1 to 3
   label: string; // "Célula X - Planta Y"
-  plannedDates: string; // e.g. "15/08 a 01/09"
-  plannedStart: string; // "2026-08-15"
-  plannedEnd: string; // "2026-09-01"
   coordinates: {
     // Relative coordinates in the SVG schematic (0 to 1000 x, 0 to 600 y)
     x: number;
     y: number;
   };
-  cultivar: string;
 }
 
 export interface RotationRecord {

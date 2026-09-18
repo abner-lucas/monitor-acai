@@ -199,7 +199,7 @@ export const RaffleModal: React.FC<RaffleModalProps> = ({
 
                     <p className="text-xs text-slate-500 mt-0.5 flex items-center justify-center gap-1">
                       <MapPin className="w-3 h-3 text-slate-400" />
-                      {currentDisplayPosition.cultivar.split('(')[0]} • Previsto: {currentDisplayPosition.plannedDates}
+                      SAF IFPA Breves • Rodízio Quinzenal
                     </p>
                   </div>
                 )}
