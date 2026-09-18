@@ -58,7 +58,10 @@ export const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({
               Objetivo e Metodologia Científica
             </h4>
             <p className="text-slate-600">
-              O projeto no <strong>IFPA Campus Breves (Marajó/PA)</strong> desenvolve o monitoramento microclimático e hídrico em Sistema Agroflorestal (SAF) com cultivo irrigado de Açaí (<em>Euterpe oleracea</em>). O sistema utiliza o <strong>rodízio aleatório sem reposição</strong> dos sensores para mapear a dinâmica de umidade do solo (em profundidades de 20cm e 40cm) em todas as 18 posições sem viés de amostragem espacial.
+              O projeto no IFPA Campus Breves (Marajó/PA) desenvolve o monitoramento integrado de solo, microclima e fisiologia vegetal em um Sistema Agroflorestal (SAF) consorciado (açaí, cacau, café, acapu e adubadeiras) sob manejo irrigado.
+            </p>
+            <p className="text-slate-600 mt-2">
+              O sistema utiliza a amostragem aleatória sem reposição para mover o conjunto de sensores entre as 18 posições (6 células triangulares × 3 plantas) ao longo de ciclos de 36 semanas (14 dias por posição). Essa metodologia mapeia o perfil de retenção hídrica do solo (conteúdo volumétrico e potencial mátrico), o microclima atmosférico e a dinâmica foliar sem viés espacial, transmitindo dados em tempo real via ZENTRA Cloud e FieldClimate
             </p>
           </div>
 
@@ -120,7 +123,10 @@ export const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({
               Infraestrutura de Sensores & Telemetria
             </div>
             <p className="text-emerald-950/80">
-              Cada célula triangular possui uma haste de concreto central onde está ancorado o Datalogger. Os sensores móveis de umidade volumétrica do solo (FDR) são inseridos no bulbo radicular da planta sorteada a cada 14 dias, transmitindo via protocolo sem fio LoRaWAN para o gateway central do IFPA.
+              A estrutura física é composta por 6 hastes metálicas ancoradas em bases de concreto no solo, com topos milimetricamente nivelados para corrigir a declividade do terreno. O datalogger e a estação meteorológica (ATMOS 41 Gen 2) são montados sobre uma haste telescópica deslizante (luva) de encaixe rápido, que garante a altura regulamentar de 2 metros e permite a movimentação ágil entre as células no rodízio.
+            </p>
+            <p className="text-emerald-950/80 mt-2">
+              Os sensores de solo (TEROS 10 para umidade volumétrica e TEROS 21 para potencial mátrico e temperatura) e os de planta (FylloClips) são fisicamente conectados aos registradores por fiações protegidas em conduítes subterrâneos de alta resistência, evitando danos por circulação no campus. A transmissão de dados é feita via telemetria celular (4G / Wi-Fi / NB-IoT) diretamente para as plataformas em nuvem ZENTRA Cloud (datalogger METER ZL6) e FieldClimate (datalogger µMETOS® ET0).
             </p>
           </div>
 
