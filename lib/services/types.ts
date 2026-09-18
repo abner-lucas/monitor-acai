@@ -55,7 +55,4 @@ export interface IRotationService {
 
   /** Update the current cycle */
   setCycle(cycle: number): Promise<number>;
-
-  /** Reset data to the default mock seed */
-  resetToSeed(): Promise<RotationRecord[]>;
 }

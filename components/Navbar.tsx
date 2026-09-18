@@ -3,7 +3,6 @@
 import React from 'react';
 import { 
   Sprout, 
-  RotateCcw, 
   Download, 
   PlusCircle, 
   Info, 
@@ -22,7 +21,6 @@ interface NavbarProps {
   records: RotationRecord[];
   onOpenManualCreate: () => void;
   onOpenInfo: () => void;
-  onResetDefaults: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -30,7 +28,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   records,
   onOpenManualCreate,
   onOpenInfo,
-  onResetDefaults,
 }) => {
   const [exportOpen, setExportOpen] = React.useState(false);
 
@@ -130,16 +127,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               title="Sobre o Projeto SAF IFPA Breves"
             >
               <Info className="w-5 h-5" />
-            </button>
-
-            {/* Reset Defaults */}
-            <button
-              id="btn-reset-data"
-              onClick={onResetDefaults}
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-              title="Restaurar dados iniciais do projeto"
-            >
-              <RotateCcw className="w-4 h-4" />
             </button>
           </div>
         </div>

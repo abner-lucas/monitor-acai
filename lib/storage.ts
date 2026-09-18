@@ -51,14 +51,6 @@ export const saveStoredCycle = (cycle: number): void => {
   }
 };
 
-export const resetStoredData = (): RotationRecord[] => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(INITIAL_SEEDED_RECORDS));
-    localStorage.setItem(STORAGE_KEY_CYCLE, '1');
-  }
-  return INITIAL_SEEDED_RECORDS;
-};
-
 // Date helper: add days to YYYY-MM-DD
 export const addDaysToDate = (dateStr: string, days: number): string => {
   const d = new Date(dateStr + 'T00:00:00');

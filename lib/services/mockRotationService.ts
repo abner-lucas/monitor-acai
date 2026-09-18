@@ -183,15 +183,6 @@ export class MockRotationService implements IRotationService {
     }
     return cycle;
   }
-
-  async resetToSeed(): Promise<RotationRecord[]> {
-    await simulateDelay(400, 600);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(INITIAL_SEEDED_RECORDS));
-      localStorage.setItem(STORAGE_KEY_CYCLE, '1');
-    }
-    return INITIAL_SEEDED_RECORDS;
-  }
 }
 
 export const mockRotationService = new MockRotationService();

@@ -221,33 +221,6 @@ export class SupabaseRotationService implements IRotationService {
 
     return cycle;
   }
-
-  async resetToSeed(): Promise<RotationRecord[]> {
-    const client = this.getClient();
-    if (!client) return INITIAL_SEEDED_RECORDS;
-    await client.from('rotation_records').delete().neq('id', '');
-    for (const rec of INITIAL_SEEDED_RECORDS) {
-      await client.from('rotation_records').insert({
-        id: rec.id,
-        cycle_number: rec.cycleNumber,
-        position_id: rec.positionId,
-        cell_id: rec.cellId,
-        plant_index: rec.plantIndex,
-        installed_at: rec.installedAt,
-        scheduled_next_change: rec.scheduledNextChange,
-        removed_at: rec.removedAt || null,
-        responsible: rec.responsible,
-        notes: rec.notes || '',
-        status: rec.status,
-        battery_level: rec.batteryLevel ?? 98,
-        signal_quality: rec.signalQuality || 'Excelente',
-        created_at: rec.createdAt,
-        updated_at: rec.updatedAt,
-      });
-    }
-    await this.setCycle(1);
-    return this.getRecords();
-  }
 }
 
 export const supabaseRotationService = new SupabaseRotationService();

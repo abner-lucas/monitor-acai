@@ -245,21 +245,6 @@ export default function HomePage() {
     }
   };
 
-  // Reset to default seed
-  const handleResetDefaults = async () => {
-    if (window.confirm('Deseja restaurar os dados de rodízio para o padrão inicial do projeto IFPA Breves?')) {
-      try {
-        const seeded = await rotationService.resetToSeed();
-        setRecords(seeded);
-        setCurrentCycle(1);
-        setSelectedPositionId(8);
-        addToast('info', 'Dados Restaurados', 'Registros redefinidos para a semente inicial de monitoramento.');
-      } catch (err: any) {
-        addToast('error', 'Erro ao restaurar dados', err.message);
-      }
-    }
-  };
-
   if (!mounted) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -285,7 +270,6 @@ export default function HomePage() {
           setIsRecordFormOpen(true);
         }}
         onOpenInfo={() => setIsInfoOpen(true)}
-        onResetDefaults={handleResetDefaults}
       />
 
       {/* Main Content Area */}
