@@ -1,0 +1,6 @@
+{
+  "name": "MonitorAçaí - Gestão de Rodízio de Sensores (Breves)",
+  "description": "Sistema de gestão e sorteio de rodízio aleatório sem reposição de sensores IoT para o SAF de açaí do IFPA Campus Breves.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
