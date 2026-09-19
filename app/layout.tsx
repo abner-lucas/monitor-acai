@@ -4,6 +4,14 @@ import './globals.css'; // Global styles
 export const metadata: Metadata = {
   title: 'MonitorAçaí - Gestão de Rodízio de Sensores (Breves)',
   description: 'Sistema de gestão e sorteio de rodízio aleatório sem reposição de sensores IoT para o SAF de açaí do IFPA Campus Breves.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     title: 'MonitorAçaí - Gestão de Rodízio de Sensores (Breves)',
     description: 'Sistema de gestão e sorteio de rodízio aleatório sem reposição de sensores IoT para o SAF de açaí do IFPA Campus Breves.',
