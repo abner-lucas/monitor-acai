@@ -156,21 +156,30 @@ const RecordFormModalContent: React.FC<ContentProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
         {/* Header */}
-        <div className="px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="font-bold text-sm sm:text-base">
-              {isEditing ? 'Editar Registro' : 'Novo Registro de Campo'}
-            </h3>
-            {isEditing && (
-              <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-white/15 text-slate-200">
-                {recordToEdit.id}
-              </span>
-            )}
+        <div className="px-6 py-4 bg-gradient-to-r from-emerald-800 to-emerald-900 text-white flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <FileText className="w-5 h-5 text-emerald-300 shrink-0" />
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm sm:text-base leading-tight">
+                  {isEditing ? 'Editar Registro' : 'Novo Registro de Campo'}
+                </h3>
+                {isEditing && (
+                  <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-white/20 text-emerald-100 font-bold">
+                    {recordToEdit.id}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-emerald-200/90 font-medium mt-0.5">
+                SAF IFPA Breves • Rodízio de Sensores
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="w-10 h-10 flex items-center justify-center rounded-xl text-emerald-200 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50 cursor-pointer"
+            aria-label="Fechar modal"
           >
             <X className="w-5 h-5" />
           </button>

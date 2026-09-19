@@ -38,7 +38,8 @@ export const CycleCompletedModal: React.FC<CycleCompletedModalProps> = ({
       <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden text-center p-6 sm:p-8">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          aria-label="Fechar modal de conclusão do ciclo"
+          className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -63,20 +64,20 @@ export const CycleCompletedModal: React.FC<CycleCompletedModalProps> = ({
         {/* Stats Summary */}
         <div className="grid grid-cols-3 gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100 mb-6 text-left">
           <div>
-            <span className="text-[11px] text-slate-500 block">Posições</span>
+            <span className="text-xs text-slate-600 font-medium block">Posições</span>
             <strong className="text-base font-bold text-slate-900">18 de 18</strong>
           </div>
           <div>
-            <span className="text-[11px] text-slate-500 block">Duração Total</span>
+            <span className="text-xs text-slate-600 font-medium block">Duração Total</span>
             <strong className="text-base font-bold text-slate-900">36 Semanas</strong>
           </div>
           <div>
-            <span className="text-[11px] text-slate-500 block">Dias / Posição</span>
+            <span className="text-xs text-slate-600 font-medium block">Dias / Posição</span>
             <strong className="text-base font-bold text-emerald-700">14 Dias</strong>
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 mb-6">
+        <p className="text-xs text-slate-600 mb-6">
           Ao iniciar um novo ciclo, o histórico atual é preservado intacto e a lista de 18 posições fica 100% disponível para a nova rodada de sorteios do <strong>Ciclo {currentCycle + 1}</strong>.
         </p>
 

@@ -341,7 +341,7 @@ export default function HomePage() {
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               Gestão de Rodízio de Sensores
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-600 mt-0.5">
               Amostragem aleatória sem reposição • SAF de Açaí • IFPA Campus Breves (Marajó/PA)
             </p>
           </div>
@@ -426,7 +426,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-8 bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+      <footer className="mt-8 bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-600">
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-center">
           <span>
             <strong>MonitorAçaí</strong> • Rodízio de Sensores IoT no SAF de Açaí do IFPA Campus Breves

@@ -84,15 +84,15 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       >
         <div>
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
               </span>
               Sensor em Campo
             </span>
-            <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${countdownBadge.color}`}>
-              <countdownBadge.icon className="w-3 h-3" />
+            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full border ${countdownBadge.color}`}>
+              <countdownBadge.icon className="w-3.5 h-3.5" />
               {countdownBadge.text}
             </span>
           </div>
@@ -103,43 +103,43 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">
                   Célula {activePosition.cellId} - Planta {activePosition.plantIndex}
                 </h3>
-                <span className="px-1.5 py-0.5 text-[11px] font-mono font-bold bg-slate-100 text-slate-700 rounded-md border border-slate-200">
+                <span className="px-2 py-0.5 text-xs font-mono font-bold bg-slate-100 text-slate-800 rounded-md border border-slate-200">
                   #{activePosition.formattedId}
                 </span>
               </div>
               
-              <p className="text-xs text-slate-500 mb-3 flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-slate-400" />
+              <p className="text-xs text-slate-600 mb-3 flex items-center gap-1 font-medium">
+                <MapPin className="w-3.5 h-3.5 text-slate-500" />
                 {activeCellMeta?.name || 'Açaizal IFPA Breves'}
               </p>
 
-              <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 space-y-1.5 mb-2.5 text-xs">
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-2 mb-2.5 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Instalação:</span>
-                  <span className="font-semibold text-slate-800">{formatDateBR(activeRecord.installedAt)}</span>
+                  <span className="text-slate-600 font-medium">Instalação:</span>
+                  <span className="font-semibold text-slate-900">{formatDateBR(activeRecord.installedAt)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Próxima Troca:</span>
+                  <span className="text-slate-600 font-medium">Próxima Troca:</span>
                   <span className={`font-semibold ${daysLeft < 0 ? 'text-rose-700 font-bold' : daysLeft === 0 ? 'text-amber-800 font-bold' : 'text-emerald-800'}`}>
                     {formatDateBR(activeRecord.scheduledNextChange)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-500">Responsável:</span>
-                  <span className="font-medium text-slate-700 truncate max-w-[150px]">{activeRecord.responsible.split('/')[0]}</span>
+                  <span className="text-slate-600 font-medium">Responsável:</span>
+                  <span className="font-semibold text-slate-800 truncate max-w-[160px]">{activeRecord.responsible.split('/')[0]}</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-500 pt-1 border-t border-slate-100">
-                <span className="flex items-center gap-1">
-                  <BatteryCharging className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="flex items-center justify-between text-xs text-slate-700 pt-1.5 border-t border-slate-100">
+                <span className="flex items-center gap-1 font-medium">
+                  <BatteryCharging className="w-4 h-4 text-emerald-600" />
                   <strong>{activeRecord.batteryLevel || 96}%</strong>
                 </span>
-                <span className="flex items-center gap-1">
-                  <Radio className="w-3.5 h-3.5 text-blue-600" />
+                <span className="flex items-center gap-1 font-medium">
+                  <Radio className="w-4 h-4 text-blue-600" />
                   <strong>{activeRecord.signalQuality || 'Excelente'}</strong>
                 </span>
-                <span className="font-mono text-[11px] text-slate-600">
+                <span className="font-mono text-xs font-semibold text-slate-700">
                   {activeCellMeta?.dataloggerId || 'DLG-01'}
                 </span>
               </div>
@@ -148,7 +148,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             <div className="py-4 text-center">
               <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-1 opacity-80" />
               <p className="text-xs font-semibold text-slate-800">Nenhum sensor ativo</p>
-              <p className="text-[11px] text-slate-500">Realize um sorteio para alocar o sensor.</p>
+              <p className="text-xs text-slate-600 font-medium">Realize um sorteio para alocar o sensor.</p>
             </div>
           )}
         </div>
@@ -164,7 +164,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               <span>Ver no Mapa</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-emerald-600" />
             </button>
-            <span className="text-[10px] text-slate-400 font-medium">14 dias por ponto</span>
+            <span className="text-xs text-slate-600 font-medium">14 dias por ponto</span>
           </div>
         )}
       </div>
@@ -176,11 +176,11 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       >
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
               <Layers className="w-3.5 h-3.5 text-emerald-600" />
               Ciclo {stats.currentCycle}
             </span>
-            <span className="text-[11px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-0.5 rounded-full">
               {stats.weeksElapsed} de {stats.totalWeeks} semanas
             </span>
           </div>
@@ -190,11 +190,11 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 {stats.completedCount}
               </span>
-              <span className="text-xs font-medium text-slate-500">
+              <span className="text-sm font-semibold text-slate-600">
                 de {stats.totalPositions} posições
               </span>
             </div>
-            <span className="text-lg font-black text-emerald-700">
+            <span className="text-xl font-black text-emerald-700">
               {stats.percentageCompleted}%
             </span>
           </div>
@@ -220,17 +220,17 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="bg-slate-50 rounded-xl p-2 border border-slate-100">
-              <span className="text-slate-500 text-[11px] block">Amostradas</span>
-              <strong className="text-slate-800 font-bold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+              <span className="text-slate-600 text-xs font-medium block mb-0.5">Amostradas</span>
+              <strong className="text-slate-900 font-bold text-sm flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
                 {stats.completedCount} plantas
               </strong>
             </div>
-            <div className="bg-slate-50 rounded-xl p-2 border border-slate-100">
-              <span className="text-slate-500 text-[11px] block">Disponíveis</span>
-              <strong className="text-emerald-700 font-bold flex items-center gap-1">
-                <Dices className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+              <span className="text-slate-600 text-xs font-medium block mb-0.5">Disponíveis</span>
+              <strong className="text-emerald-800 font-bold text-sm flex items-center gap-1">
+                <Dices className="w-4 h-4 text-emerald-600" />
                 {stats.remainingCount} plantas
               </strong>
             </div>
@@ -241,13 +241,13 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           {isCycleComplete ? (
             <button
               onClick={onOpenCycleComplete}
-              className="w-full py-1.5 px-2 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg font-semibold flex items-center justify-center gap-1 hover:bg-amber-100 transition-colors text-xs"
+              className="w-full py-2 px-3 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg font-semibold flex items-center justify-center gap-1.5 hover:bg-amber-100 transition-colors text-xs"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              Ciclo Completo! Abrir Ciclo {stats.currentCycle + 1}
+              <Sparkles className="w-4 h-4 text-amber-600" />
+              <span>Ciclo Completo! Abrir Ciclo {stats.currentCycle + 1}</span>
             </button>
           ) : (
-            <span className="text-slate-500 text-[11px]">
+            <span className="text-slate-600 text-xs font-medium">
               Rotação probabilística sem reposição (SAF Breves)
             </span>
           )}
@@ -261,11 +261,11 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       >
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-700/80 text-emerald-100 border border-emerald-500/40">
-              <Sparkles className="w-3 h-3 text-emerald-300" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-700/90 text-emerald-100 border border-emerald-500/50">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
               Sorteio Aleatório
             </span>
-            <span className="text-[11px] text-emerald-200 font-mono">
+            <span className="text-xs text-emerald-200 font-mono font-semibold">
               {availablePositions.length} restantes
             </span>
           </div>
@@ -273,7 +273,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
           <h3 className="text-lg font-bold tracking-tight text-white mb-1">
             Próximo Rodízio
           </h3>
-          <p className="text-xs text-emerald-100/80 mb-3">
+          <p className="text-xs text-emerald-100/90 mb-3 leading-relaxed">
             Sorteie a próxima planta para troca do sensor com permanência de 14 dias.
           </p>
 
@@ -281,13 +281,13 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             {availablePositions.slice(0, 10).map((pos) => (
               <span
                 key={pos.id}
-                className="px-1.5 py-0.5 bg-emerald-900/80 text-emerald-100 text-[10px] font-mono rounded-md border border-emerald-700/50"
+                className="px-2 py-0.5 bg-emerald-950/80 text-emerald-200 text-xs font-mono font-bold rounded-md border border-emerald-700/60"
               >
                 #{pos.formattedId}
               </span>
             ))}
             {availablePositions.length > 10 && (
-              <span className="text-[10px] text-emerald-300 self-center">
+              <span className="text-xs text-emerald-300 font-bold self-center px-1">
                 +{availablePositions.length - 10}
               </span>
             )}

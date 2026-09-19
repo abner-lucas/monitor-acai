@@ -412,7 +412,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                 </div>
               </div>
 
-              <div className="text-[11px] text-slate-500 italic">
+              <div className="text-xs text-slate-600 font-medium">
                 * Clique em qualquer número para inspecionar os detalhes da planta
               </div>
             </div>
@@ -440,17 +440,17 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-slate-900">{cell.name}</span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                         {cell.dataloggerId}
                       </span>
                     </div>
                     {activeInCell && (
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
+                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
                         Sensor Ativo
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mb-3">{cell.description}</p>
+                  <p className="text-xs text-slate-600 mb-3">{cell.description}</p>
 
                   <div className="space-y-2">
                     {cellPositions.map((pos) => {
@@ -479,8 +479,8 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                               {pos.formattedId}
                             </span>
                             <div>
-                              <span className="font-semibold block">Planta {pos.plantIndex}</span>
-                              <span className="text-[10px] text-slate-500">
+                              <span className="font-semibold block text-slate-900">Planta {pos.plantIndex}</span>
+                              <span className="text-xs text-slate-600">
                                 {status === 'active' && posRecord && `Instalado em ${formatDateBR(posRecord.installedAt)}`}
                                 {status === 'completed' && posRecord && `Coletado em ${formatDateBR(posRecord.removedAt || posRecord.installedAt)}`}
                                 {status === 'available' && 'Aguardando sorteio'}
@@ -490,19 +490,19 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
 
                           <div className="flex items-center gap-1.5">
                             {status === 'active' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white">
-                                <Radio className="w-2.5 h-2.5 animate-ping" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white">
+                                <Radio className="w-3 h-3 animate-ping" />
                                 Monitorando
                               </span>
                             )}
                             {status === 'completed' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-                                <CheckCircle2 className="w-2.5 h-2.5 text-blue-600" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                                <CheckCircle2 className="w-3 h-3 text-blue-600" />
                                 Concluída
                               </span>
                             )}
                             {status === 'available' && (
-                              <span className="text-[10px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                              <span className="text-xs font-medium text-slate-600 bg-white px-2 py-0.5 rounded-full border border-slate-200">
                                 Disponível
                               </span>
                             )}
@@ -548,7 +548,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-600 mt-0.5">
                   Célula {selectedPosition.cellId} ({CELLS_METADATA.find(c => c.id === selectedPosition.cellId)?.name}) • Planta {selectedPosition.plantIndex}
                   {selectedPositionRecord && ` • Instalado em: ${formatDateBR(selectedPositionRecord.installedAt)}`}
                   {selectedPositionRecord?.removedAt && ` • Coletado em: ${formatDateBR(selectedPositionRecord.removedAt)}`}
@@ -568,7 +568,8 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
               )}
               <button
                 onClick={() => onSelectPosition(0)}
-                className="px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 bg-white border border-slate-200 rounded-lg"
+                aria-label="Fechar detalhes da planta selecionada"
+                className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 Fechar
               </button>

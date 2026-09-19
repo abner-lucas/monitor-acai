@@ -29,7 +29,7 @@ export const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
         {/* Header */}
-        <div className="px-6 py-4 bg-emerald-800 text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-gradient-to-r from-emerald-800 to-emerald-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sprout className="w-5 h-5 text-emerald-300" />
             <div>
@@ -43,7 +43,8 @@ export const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Fechar informações do projeto"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -72,23 +73,23 @@ export const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({
             </h5>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
-                <span className="text-slate-500 block">Células Triangulares</span>
+                <span className="text-slate-600 block">Células Triangulares</span>
                 <strong className="text-slate-900 text-base font-black">6 Células</strong>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
-                <span className="text-slate-500 block">Plantas por Célula</span>
+                <span className="text-slate-600 block">Plantas por Célula</span>
                 <strong className="text-slate-900 text-base font-black">3 Plantas</strong>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
-                <span className="text-slate-500 block">Total de Posições</span>
+                <span className="text-slate-600 block">Total de Posições</span>
                 <strong className="text-slate-900 text-base font-black">{TOTAL_POSITIONS} Locais</strong>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
-                <span className="text-slate-500 block">Tempo por Local</span>
+                <span className="text-slate-600 block">Tempo por Local</span>
                 <strong className="text-emerald-700 text-base font-black">{DAYS_PER_ROTATION} Dias</strong>
               </div>
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-xs text-slate-600 font-medium">
               * Duração de 1 Ciclo Completo: <strong>18 posições × 14 dias = 252 dias (36 semanas de monitoramento contínuo)</strong>.
             </p>
           </div>
@@ -104,11 +105,11 @@ export const ProjectInfoModal: React.FC<ProjectInfoModalProps> = ({
                 <div key={c.id} className="p-2.5 rounded-lg border border-slate-200 bg-white">
                   <div className="flex items-center justify-between font-bold text-slate-900">
                     <span>{c.name}</span>
-                    <span className="text-[10px] font-mono bg-slate-100 px-1.5 py-0.5 rounded-sm text-slate-600">
+                    <span className="text-xs font-mono font-semibold bg-slate-100 px-2 py-0.5 rounded-md text-slate-700 border border-slate-200">
                       {c.dataloggerId}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-600 mt-0.5">
                     Plantas monitoradas: <strong>Posições #{c.plantPositions.map(p => p < 10 ? '0' + p : p).join(', #')}</strong>
                   </p>
                 </div>

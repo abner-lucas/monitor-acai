@@ -48,7 +48,8 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           <button
             onClick={onClose}
             disabled={isDeleting}
-            className="p-1 rounded-lg text-rose-200 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+            aria-label="Fechar modal de exclusão"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-rose-200 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -77,7 +78,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
                 <span className="font-bold text-slate-800 block">
                   Liberar posição para novo sorteio
                 </span>
-                <span className="text-slate-500 block mt-0.5">
+                <span className="text-slate-600 block mt-0.5">
                   Permite sortear este local novamente no ciclo atual.
                 </span>
               </div>

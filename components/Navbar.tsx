@@ -135,8 +135,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="btn-project-info"
               onClick={onOpenInfo}
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
               title="Sobre o Projeto SAF IFPA Breves"
+              aria-label="Sobre o Projeto SAF IFPA Breves"
             >
               <Info className="w-5 h-5" />
             </button>
@@ -148,20 +149,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="flex items-center justify-end gap-1">
                     {isSuperuser && (
                       <span title="Superusuário Coordenador">
-                        <ShieldCheck className="w-3 h-3 text-amber-600" />
+                        <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
                       </span>
                     )}
                     <span className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[130px]">
                       {currentUser.fullName || currentUser.email.split('@')[0]}
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-mono leading-tight truncate max-w-[130px]">
+                  <span className="text-xs text-slate-500 font-mono leading-tight truncate max-w-[130px]">
                     {currentUser.email}
                   </span>
                 </div>
 
                 <div 
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs border shadow-2xs ${
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs border shadow-2xs ${
                     isSuperuser
                       ? 'bg-amber-100 text-amber-900 border-amber-300'
                       : 'bg-emerald-100 text-emerald-800 border-emerald-200'
@@ -175,10 +176,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     id="btn-sign-out"
                     onClick={onSignOut}
-                    className="p-2 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                    title="Encerrar sessão (Sair)"
+                    className="h-9 px-2.5 flex items-center gap-1.5 text-slate-600 hover:text-rose-700 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition-colors cursor-pointer text-xs font-semibold"
+                    title="Encerrar sessão"
+                    aria-label="Encerrar sessão"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-4 h-4 text-slate-400 group-hover:text-rose-600" />
+                    <span className="hidden sm:inline">Sair</span>
                   </button>
                 )}
               </div>
