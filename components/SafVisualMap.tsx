@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Map, 
   LayoutGrid, 
@@ -22,6 +22,7 @@ interface SafVisualMapProps {
   selectedPositionId: number | null;
   onSelectPosition: (positionId: number) => void;
   onOpenRaffle: () => void;
+  preferredViewMode?: 'schematic' | 'grid';
 }
 
 export const SafVisualMap: React.FC<SafVisualMapProps> = ({
@@ -30,8 +31,15 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
   selectedPositionId,
   onSelectPosition,
   onOpenRaffle,
+  preferredViewMode,
 }) => {
-  const [viewMode, setViewMode] = useState<'schematic' | 'grid'>('schematic');
+  const [viewMode, setViewMode] = useState<'schematic' | 'grid'>(preferredViewMode || 'schematic');
+
+  useEffect(() => {
+    if (preferredViewMode) {
+      setViewMode(preferredViewMode);
+    }
+  }, [preferredViewMode]);
 
   const selectedPosition = POSITIONS_DATA.find((p) => p.id === selectedPositionId);
   const selectedPositionRecord = records.find(
@@ -300,12 +308,21 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                           <circle
                             cx="0"
                             cy="0"
-                            r="28"
+                            r="30"
                             fill="none"
                             stroke="#0284c7"
-                            strokeWidth="2.5"
-                            strokeDasharray="4,3"
-                          />
+                            strokeWidth="3"
+                            strokeDasharray="6,4"
+                          >
+                            <animateTransform
+                              attributeName="transform"
+                              type="rotate"
+                              from="0"
+                              to="360"
+                              dur="10s"
+                              repeatCount="indefinite"
+                            />
+                          </circle>
                         )}
 
                         {/* Node Container Box */}
@@ -502,7 +519,10 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
 
         {/* Selected Position Detail Card */}
         {selectedPosition && (
-          <div className="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div 
+            id="saf-selected-position-card"
+            className="mt-5 p-4 rounded-xl bg-slate-50 border-2 border-emerald-500/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all"
+          >
             <div className="flex items-start sm:items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-mono font-extrabold text-xl text-slate-900 shadow-xs">
                 {selectedPosition.formattedId}

@@ -153,13 +153,15 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
         {activePosition && (
           <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
             <button
+              type="button"
               onClick={() => onSelectPosition(activePosition.id)}
-              className="text-xs font-medium text-emerald-700 hover:text-emerald-900 flex items-center gap-1 transition-colors"
+              className="group inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 hover:text-emerald-900 transition-all cursor-pointer py-1 px-1.5 -ml-1.5 rounded-lg hover:bg-emerald-50 active:scale-95"
+              title={`Ver posição #${activePosition.formattedId} no mapa esquemático do SAF`}
             >
-              Ver no Mapa
-              <ArrowRight className="w-3 h-3" />
+              <span>Ver no Mapa</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform text-emerald-600" />
             </button>
-            <span className="text-[10px] text-slate-400">14 dias por ponto</span>
+            <span className="text-[10px] text-slate-400 font-medium">14 dias por ponto</span>
           </div>
         )}
       </div>

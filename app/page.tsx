@@ -46,6 +46,21 @@ export default function HomePage() {
 
   // Navigation View Tab
   const [activeTab, setActiveTab] = useState<ActiveViewTab>('all');
+  const [preferredMapMode, setPreferredMapMode] = useState<'schematic' | 'grid'>('schematic');
+
+  const handleScrollToMapPosition = (posId: number) => {
+    setSelectedPositionId(posId);
+    setPreferredMapMode('schematic');
+    if (activeTab === 'history') {
+      setActiveTab('all');
+    }
+    setTimeout(() => {
+      const mapElement = document.getElementById('saf-visual-matrix');
+      if (mapElement) {
+        mapElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 60);
+  };
 
   // Toasts
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -329,10 +344,7 @@ export default function HomePage() {
           activeRecord={activeRecord}
           availablePositions={availablePositions}
           onOpenRaffle={() => setIsRaffleOpen(true)}
-          onSelectPosition={(posId) => {
-            setSelectedPositionId(posId);
-            if (activeTab === 'history') setActiveTab('all');
-          }}
+          onSelectPosition={handleScrollToMapPosition}
           onOpenCycleComplete={() => setIsCycleCompleteOpen(true)}
         />
 
@@ -344,6 +356,7 @@ export default function HomePage() {
             selectedPositionId={selectedPositionId}
             onSelectPosition={(posId) => setSelectedPositionId(posId === selectedPositionId ? null : posId)}
             onOpenRaffle={() => setIsRaffleOpen(true)}
+            preferredViewMode={preferredMapMode}
           />
         )}
 
@@ -361,10 +374,7 @@ export default function HomePage() {
               setIsRecordFormOpen(true);
             }}
             onDeleteRecord={(record) => setRecordToDelete(record)}
-            onSelectPosition={(posId) => {
-              setSelectedPositionId(posId);
-              setActiveTab('all');
-            }}
+            onSelectPosition={handleScrollToMapPosition}
           />
         )}
       </main>
