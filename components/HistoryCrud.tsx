@@ -469,12 +469,9 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
       </div>
 
       {/* Footer info bar */}
-      <div className="p-3.5 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-end">
         <span>
-          Sistema de Monitoramento Agroflorestal • IFPA Campus Breves
-        </span>
-        <span>
-          Total no banco de dados local: <strong>{records.length}</strong> rodízios cadastrados
+          Total: <strong>{records.length}</strong> {records.length === 1 ? 'rodízio cadastrado' : 'rodízios cadastrados'}
         </span>
       </div>
     </div>

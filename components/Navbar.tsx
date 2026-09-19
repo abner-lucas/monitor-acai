@@ -8,9 +8,6 @@ import {
   Info, 
   FileSpreadsheet, 
   FileText,
-  Radio,
-  MapPin,
-  Database,
   LogOut,
   Users,
   ShieldCheck
@@ -60,19 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
                   Ciclo {currentCycle}
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                  <Radio className="w-3 h-3 text-emerald-600 animate-pulse" />
-                  IoT Breves
-                </span>
-                <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                  <Database className="w-3 h-3 text-emerald-600" />
-                  Supabase Nuvem
-                </span>
               </div>
-              <p className="text-xs text-slate-500 hidden sm:flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-slate-400" />
-                SAF Açaí • IFPA Campus Breves (Marajó/PA)
-              </p>
             </div>
           </div>
 

@@ -427,12 +427,9 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="mt-8 bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center">
           <span>
             <strong>MonitorAçaí</strong> • Rodízio de Sensores IoT no SAF de Açaí do IFPA Campus Breves
-          </span>
-          <span className="text-[11px] text-slate-400">
-            Conectado ao Supabase Cloud • PostgreSQL
           </span>
         </div>
       </footer>

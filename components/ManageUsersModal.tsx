@@ -8,9 +8,7 @@ import {
   ShieldCheck, 
   X, 
   Loader2, 
-  CheckCircle2, 
-  Database,
-  Cloud
+  CheckCircle2
 } from 'lucide-react';
 import { authService, SUPERUSER_EMAIL } from '@/lib/services/authService';
 import { AuthorizedUser } from '@/lib/types';
@@ -76,7 +74,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
       if (!res.success) {
         onShowToast('error', 'Falha ao autorizar', res.error || 'Erro desconhecido.');
       } else {
-        onShowToast('success', 'Gravado no Supabase!', `${newName} (${newEmail}) foi cadastrado diretamente no banco e já pode acessar.`);
+        onShowToast('success', 'Pesquisador Autorizado!', `${newName} (${newEmail}) foi cadastrado com sucesso.`);
         setNewName('');
         setNewEmail('');
         setNewPassword('Ifpa@2026');
@@ -91,11 +89,11 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
   };
 
   const handleRemoveUser = async (email: string, name: string) => {
-    if (confirm(`Tem certeza que deseja revogar o acesso de "${name}" (${email})? Essa alteração será refletida no banco Supabase.`)) {
+    if (confirm(`Tem certeza que deseja revogar o acesso de "${name}" (${email})?`)) {
       try {
         const res = await authService.removeAuthorizedUser(email);
         if (res.success) {
-          onShowToast('info', 'Acesso Revogado', `O pesquisador ${name} foi removido do banco Supabase.`);
+          onShowToast('info', 'Acesso Revogado', `O pesquisador ${name} foi removido com sucesso.`);
           await loadUsers();
         } else {
           onShowToast('error', 'Erro ao revogar', res.error);
@@ -116,15 +114,9 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
               <Users className="w-6 h-6 text-emerald-300" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-black tracking-tight">
-                  Gerenciar Pesquisadores Autorizados
-                </h2>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
-                  <Cloud className="w-3 h-3 text-emerald-300" />
-                  Supabase Nuvem
-                </span>
-              </div>
+              <h2 className="text-lg sm:text-xl font-black tracking-tight">
+                Gerenciar Pesquisadores Autorizados
+              </h2>
               <p className="text-xs text-emerald-200/90 font-medium mt-0.5">
                 Controle de Acesso Restrito • Exclusivo do Superusuário
               </p>
@@ -173,22 +165,14 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
           {/* TAB 1: LIST OF USERS */}
           {activeTab === 'users' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-500 pb-1">
-                <span>Registros carregados diretamente do banco PostgreSQL:</span>
-                <span className="inline-flex items-center gap-1 font-mono text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  <Database className="w-3 h-3 text-emerald-600" />
-                  Sincronizado
-                </span>
-              </div>
-
               {isLoading ? (
                 <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-                  <span className="text-xs">Consultando banco de dados Supabase...</span>
+                  <span className="text-xs">Carregando lista de pesquisadores...</span>
                 </div>
               ) : users.length === 0 ? (
                 <div className="py-8 text-center text-slate-500 text-xs">
-                  Nenhum usuário cadastrado no banco de dados.
+                  Nenhum usuário cadastrado no sistema.
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
@@ -251,7 +235,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
                               type="button"
                               onClick={() => handleRemoveUser(u.email, u.fullName)}
                               className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title="Revogar Acesso no Supabase"
+                              title="Revogar Acesso"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -268,13 +252,6 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
           {/* TAB 2: ADD USER */}
           {activeTab === 'add' && (
             <form onSubmit={handleAddUser} className="space-y-4 max-w-lg mx-auto py-2">
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs flex items-start gap-2">
-                <Database className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">
-                  Ao clicar em <strong>Autorizar Pesquisador</strong>, o usuário é gravado <strong>automaticamente no Supabase</strong> em nuvem. Não é necessário executar nenhum script manual.
-                </span>
-              </div>
-
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Nome Completo do Pesquisador *
@@ -331,7 +308,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Gravando no Supabase...</span>
+                      <span>Processando...</span>
                     </>
                   ) : (
                     <>
@@ -346,11 +323,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-          <span className="flex items-center gap-1 font-mono text-[11px]">
-            <Cloud className="w-3.5 h-3.5 text-emerald-600" />
-            Supabase Cloud PostgreSQL
-          </span>
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
           <button
             type="button"
             onClick={onClose}
