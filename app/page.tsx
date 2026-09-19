@@ -22,6 +22,7 @@ import { CycleCompletedModal } from '@/components/CycleCompletedModal';
 import { ProjectInfoModal } from '@/components/ProjectInfoModal';
 import { ToastContainer, ToastMessage } from '@/components/Toast';
 import { LoginScreen } from '@/components/LoginScreen';
+import { ManageUsersModal } from '@/components/ManageUsersModal';
 import { RotationRecord, AuthUser } from '@/lib/types';
 import { rotationService } from '@/lib/services';
 import { authService } from '@/lib/services/authService';
@@ -90,6 +91,7 @@ export default function HomePage() {
   const [recordToDelete, setRecordToDelete] = useState<RotationRecord | null>(null);
   const [isCycleCompleteOpen, setIsCycleCompleteOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isManageUsersOpen, setIsManageUsersOpen] = useState(false);
 
   // Fetch initial data from Service Layer
   const loadData = useCallback(async (showLoader = false) => {
@@ -328,6 +330,7 @@ export default function HomePage() {
         onOpenInfo={() => setIsInfoOpen(true)}
         currentUser={currentUser}
         onSignOut={handleSignOut}
+        onOpenManageUsers={() => setIsManageUsersOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -472,6 +475,12 @@ export default function HomePage() {
       <ProjectInfoModal
         isOpen={isInfoOpen}
         onClose={() => setIsInfoOpen(false)}
+      />
+
+      <ManageUsersModal
+        isOpen={isManageUsersOpen}
+        onClose={() => setIsManageUsersOpen(false)}
+        onShowToast={addToast}
       />
     </div>
   );

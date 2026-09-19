@@ -49,3 +49,13 @@ export interface AuthUser {
   fullName?: string;
   role?: string;
 }
+
+export interface AuthorizedUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: 'superuser' | 'pesquisador';
+  password?: string;
+  isActive: boolean;
+  createdAt: string;
+}
