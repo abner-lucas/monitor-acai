@@ -21,8 +21,10 @@ import { DeleteConfirmModal } from '@/components/DeleteConfirmModal';
 import { CycleCompletedModal } from '@/components/CycleCompletedModal';
 import { ProjectInfoModal } from '@/components/ProjectInfoModal';
 import { ToastContainer, ToastMessage } from '@/components/Toast';
-import { RotationRecord } from '@/lib/types';
+import { LoginScreen } from '@/components/LoginScreen';
+import { RotationRecord, AuthUser } from '@/lib/types';
 import { rotationService } from '@/lib/services';
+import { authService } from '@/lib/services/authService';
 import { 
   computeCycleStats,
   getAvailablePositionsForCycle
@@ -37,6 +39,10 @@ export default function HomePage() {
     () => true,
     () => false
   );
+
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
 
   // Core Data State from Service Layer
   const [records, setRecords] = useState<RotationRecord[]>([]);
@@ -112,35 +118,43 @@ export default function HomePage() {
 
   useEffect(() => {
     let isCancelled = false;
-    async function init() {
+
+    async function initAuth() {
       try {
-        const [fetchedRecords, fetchedCycle] = await Promise.all([
-          rotationService.getRecords(),
-          rotationService.getCurrentCycle(),
-        ]);
+        const user = await authService.getCurrentUser();
         if (!isCancelled) {
-          setRecords(fetchedRecords);
-          setCurrentCycle(fetchedCycle);
-          const active = fetchedRecords.find(
-            (r) => r.cycleNumber === fetchedCycle && r.status === 'active'
-          );
-          if (active) {
-            setSelectedPositionId(active.positionId);
+          setCurrentUser(user);
+          setIsAuthChecking(false);
+          if (user) {
+            loadData(true);
+          } else {
+            setIsLoading(false);
           }
-          setIsLoading(false);
         }
-      } catch (err: any) {
+      } catch (err) {
         if (!isCancelled) {
-          addToast('error', 'Erro ao carregar dados', err.message);
+          setIsAuthChecking(false);
           setIsLoading(false);
         }
       }
     }
-    init();
+
+    initAuth();
+
+    const unsubscribe = authService.onAuthStateChange((user) => {
+      if (!isCancelled) {
+        setCurrentUser(user);
+        if (user) {
+          loadData(true);
+        }
+      }
+    });
+
     return () => {
       isCancelled = true;
+      unsubscribe();
     };
-  }, [addToast]);
+  }, [loadData]);
 
   // Derived statistics
   const stats = computeCycleStats(records, currentCycle);
@@ -260,14 +274,41 @@ export default function HomePage() {
     }
   };
 
-  if (!mounted) {
+  // Handle Sign Out
+  const handleSignOut = async () => {
+    try {
+      await authService.signOut();
+      setCurrentUser(null);
+      addToast('info', 'Sessão encerrada', 'Você saiu com sucesso do MonitorAçaí.');
+    } catch (err: any) {
+      addToast('error', 'Erro ao sair', err.message);
+    }
+  };
+
+  if (!mounted || isAuthChecking) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-2">
           <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-semibold text-slate-600">Carregando MonitorAçaí...</span>
+          <span className="text-xs font-semibold text-slate-600">Verificando credenciais de acesso...</span>
         </div>
       </div>
+    );
+  }
+
+  // Se não estiver autenticado, exibe a tela de login
+  if (!currentUser) {
+    return (
+      <>
+        <ToastContainer toasts={toasts} onDismiss={removeToast} />
+        <LoginScreen
+          onAuthSuccess={(user) => {
+            setCurrentUser(user);
+            addToast('success', 'Acesso Autorizado', `Bem-vindo(a), ${user.fullName || user.email}!`);
+            loadData(true);
+          }}
+        />
+      </>
     );
   }
 
@@ -285,6 +326,8 @@ export default function HomePage() {
           setIsRecordFormOpen(true);
         }}
         onOpenInfo={() => setIsInfoOpen(true)}
+        currentUser={currentUser}
+        onSignOut={handleSignOut}
       />
 
       {/* Main Content Area */}

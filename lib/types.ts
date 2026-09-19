@@ -42,3 +42,10 @@ export interface CycleStats {
   totalWeeks: number; // 36
   daysRemainingInCurrentPosition: number;
 }
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  fullName?: string;
+  role?: string;
+}

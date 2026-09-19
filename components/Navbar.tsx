@@ -11,9 +11,11 @@ import {
   FileText,
   Radio,
   MapPin,
-  Database
+  Database,
+  LogOut,
+  User
 } from 'lucide-react';
-import { RotationRecord } from '@/lib/types';
+import { RotationRecord, AuthUser } from '@/lib/types';
 import { exportRecordsToCSV, exportRecordsToExcel } from '@/lib/storage';
 
 interface NavbarProps {
@@ -21,6 +23,8 @@ interface NavbarProps {
   records: RotationRecord[];
   onOpenManualCreate: () => void;
   onOpenInfo: () => void;
+  currentUser?: AuthUser | null;
+  onSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,6 +32,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   records,
   onOpenManualCreate,
   onOpenInfo,
+  currentUser,
+  onSignOut,
 }) => {
   const [exportOpen, setExportOpen] = React.useState(false);
 
@@ -123,11 +129,43 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="btn-project-info"
               onClick={onOpenInfo}
-              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
               title="Sobre o Projeto SAF IFPA Breves"
             >
               <Info className="w-5 h-5" />
             </button>
+
+            {/* User Profile & Sign Out */}
+            {currentUser && (
+              <div className="flex items-center pl-2 ml-1 border-l border-slate-200 gap-2">
+                <div className="hidden lg:flex flex-col text-right">
+                  <span className="text-xs font-bold text-slate-800 leading-tight truncate max-w-[130px]">
+                    {currentUser.fullName || currentUser.email.split('@')[0]}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono leading-tight truncate max-w-[130px]">
+                    {currentUser.email}
+                  </span>
+                </div>
+
+                <div 
+                  className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs border border-emerald-200 shadow-2xs"
+                  title={currentUser.fullName || currentUser.email}
+                >
+                  {(currentUser.fullName?.[0] || currentUser.email[0] || 'P').toUpperCase()}
+                </div>
+
+                {onSignOut && (
+                  <button
+                    id="btn-sign-out"
+                    onClick={onSignOut}
+                    className="p-2 text-slate-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                    title="Encerrar sessão (Sair)"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
