@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { X, Check, Calendar, UserCheck, FileText, BatteryCharging, Radio, Loader2, AlertCircle } from 'lucide-react';
 import { RotationRecord } from '@/lib/types';
 import { POSITIONS_DATA } from '@/lib/constants';
-import { addDaysToDate } from '@/lib/storage';
+import { addDaysToDate, getTodayLocalDateStr } from '@/lib/storage';
 
 interface RecordFormModalProps {
   isOpen: boolean;
@@ -62,7 +62,7 @@ const RecordFormModalContent: React.FC<ContentProps> = ({
   onSaveRecord,
 }) => {
   const isEditing = !!recordToEdit;
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayLocalDateStr();
 
   const [cycleNumber, setCycleNumber] = useState<number>(() => recordToEdit ? recordToEdit.cycleNumber : currentCycle);
   const [positionId, setPositionId] = useState<number>(() => recordToEdit ? recordToEdit.positionId : 1);

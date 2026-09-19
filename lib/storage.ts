@@ -51,11 +51,29 @@ export const saveStoredCycle = (cycle: number): void => {
   }
 };
 
+// Date helper: get today's local date as YYYY-MM-DD
+export const getTodayLocalDateStr = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // Date helper: add days to YYYY-MM-DD
 export const addDaysToDate = (dateStr: string, days: number): string => {
-  const d = new Date(dateStr + 'T00:00:00');
+  const cleanDate = dateStr.split('T')[0];
+  const parts = cleanDate.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return dateStr;
+
+  const [year, month, day] = parts;
+  const d = new Date(year, month - 1, day, 0, 0, 0, 0);
   d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0];
+
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 };
 
 // Format date for display (BR: DD/MM/YYYY)
@@ -68,12 +86,25 @@ export const formatDateBR = (dateStr?: string | null): string => {
   return dateStr;
 };
 
-// Calculate days difference between today and a target date
+// Calculate days difference between today (midnight) and a target date (midnight)
+// Returns:
+//   > 0 : days left in the future (e.g. 14, 2, 1)
+//   0   : target date is today
+//   < 0 : target date is overdue (e.g. -1 means 1 day late)
 export const calculateDaysRemaining = (targetDateStr: string): number => {
-  const target = new Date(targetDateStr + 'T23:59:59').getTime();
-  const now = new Date().getTime();
-  const diffMs = target - now;
-  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (!targetDateStr) return 0;
+  const cleanDate = targetDateStr.split('T')[0];
+  const parts = cleanDate.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return 0;
+
+  const [targetYear, targetMonth, targetDay] = parts;
+  const targetMidnight = new Date(targetYear, targetMonth - 1, targetDay, 0, 0, 0, 0).getTime();
+
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
+
+  const diffMs = targetMidnight - todayMidnight;
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
 };
 
 // Compute status of a position within the current cycle

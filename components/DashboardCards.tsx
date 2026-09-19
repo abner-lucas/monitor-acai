@@ -41,7 +41,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
 
   const daysLeft = stats.daysRemainingInCurrentPosition;
   let countdownBadge = {
-    text: `${daysLeft} dias restantes`,
+    text: daysLeft === 1 ? '1 dia restante' : `${daysLeft} dias restantes`,
     color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
     icon: Clock,
   };
@@ -53,8 +53,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
       icon: AlertTriangle,
     };
   } else if (daysLeft < 0) {
+    const overdueDays = Math.abs(daysLeft);
     countdownBadge = {
-      text: `Troca atrasada (${Math.abs(daysLeft)}d)`,
+      text: `Troca atrasada (${overdueDays}d)`,
       color: 'bg-rose-100 text-rose-800 border-rose-200',
       icon: AlertTriangle,
     };
@@ -66,7 +67,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
     };
   } else if (daysLeft <= 2) {
     countdownBadge = {
-      text: `Faltam ${daysLeft} dias`,
+      text: daysLeft === 1 ? 'Falta 1 dia' : `Faltam ${daysLeft} dias`,
       color: 'bg-amber-100 text-amber-800 border-amber-200',
       icon: Clock,
     };
@@ -119,7 +120,9 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Próxima Troca:</span>
-                  <span className="font-semibold text-emerald-800">{formatDateBR(activeRecord.scheduledNextChange)}</span>
+                  <span className={`font-semibold ${daysLeft < 0 ? 'text-rose-700 font-bold' : daysLeft === 0 ? 'text-amber-800 font-bold' : 'text-emerald-800'}`}>
+                    {formatDateBR(activeRecord.scheduledNextChange)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Responsável:</span>

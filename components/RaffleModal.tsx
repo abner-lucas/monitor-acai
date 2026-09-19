@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { PositionInfo, RotationRecord } from '@/lib/types';
-import { addDaysToDate, formatDateBR } from '@/lib/storage';
+import { addDaysToDate, formatDateBR, getTodayLocalDateStr } from '@/lib/storage';
 
 interface RaffleModalProps {
   isOpen: boolean;
@@ -51,7 +51,7 @@ export const RaffleModal: React.FC<RaffleModalProps> = ({
   const [isConfirming, setIsConfirming] = useState(false);
 
   // Form states
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayLocalDateStr();
   const [installedAt, setInstalledAt] = useState(todayStr);
   const [scheduledNextChange, setScheduledNextChange] = useState(addDaysToDate(todayStr, 14));
   const [responsible, setResponsible] = useState('Ábner Lucas / Técnico IFPA');
