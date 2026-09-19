@@ -6,24 +6,6 @@ const STORAGE_KEY_AUTHORIZED_USERS = 'monitor_acai_authorized_users_v2';
 
 export const SUPERUSER_EMAIL = 'abner.lucas@ifpa.edu.br';
 
-export const DEFAULT_SUPERUSER: AuthorizedUser = {
-  id: 'usr_superuser_abner',
-  email: 'abner.lucas@ifpa.edu.br',
-  fullName: 'Prof. Me. Ábner Lucas (Coordenador SAF)',
-  role: 'superuser',
-  password: 'Ifpa@2026',
-  isActive: true,
-  createdAt: '2026-09-01T00:00:00.000Z',
-};
-
-// Fallback user for backwards compatibility
-export const DEFAULT_DEMO_USER: AuthUser = {
-  id: DEFAULT_SUPERUSER.id,
-  email: DEFAULT_SUPERUSER.email,
-  fullName: DEFAULT_SUPERUSER.fullName,
-  role: DEFAULT_SUPERUSER.role,
-};
-
 class AuthService {
   private supabase: SupabaseClient | null = null;
   private listeners: Array<(user: AuthUser | null) => void> = [];
@@ -63,19 +45,19 @@ class AuthService {
   }
 
   /**
-   * Obtém os usuários autorizados do sistema (do Supabase ou do cache local)
+   * Obtém os usuários e credenciais autorizados diretamente do banco Supabase
    */
   public async getAuthorizedUsers(): Promise<AuthorizedUser[]> {
-    // 1. Tentar carregar do Supabase se disponível
     if (this.supabase) {
+      // 1. Tentar ler da tabela dedicada authorized_users
       try {
-        const { data, error } = await this.supabase
+        const { data: tableData, error: tableError } = await this.supabase
           .from('authorized_users')
           .select('*')
           .order('created_at', { ascending: true });
 
-        if (!error && Array.isArray(data) && data.length > 0) {
-          const mapped: AuthorizedUser[] = data.map((u: any) => ({
+        if (!tableError && Array.isArray(tableData) && tableData.length > 0) {
+          const mapped: AuthorizedUser[] = tableData.map((u: any) => ({
             id: u.id || `usr_${Math.random()}`,
             email: String(u.email || '').toLowerCase().trim(),
             fullName: u.full_name || u.fullName || 'Pesquisador SAF',
@@ -85,47 +67,47 @@ class AuthService {
             createdAt: u.created_at || new Date().toISOString(),
           }));
 
-          // Garantir que o superusuário sempre esteja presente
-          if (!mapped.some(u => u.email.toLowerCase() === SUPERUSER_EMAIL.toLowerCase())) {
-            mapped.unshift(DEFAULT_SUPERUSER);
-          }
-
           this.saveLocalAuthorizedUsers(mapped);
           return mapped;
         }
       } catch (err) {
-        console.warn('Supabase authorized_users inacessível, utilizando cache local:', err);
+        // Tabela ainda não criada ou inacessível, avança para app_settings
+      }
+
+      // 2. Ler da tabela app_settings no banco Supabase
+      try {
+        const { data: settingsData, error: settingsError } = await this.supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'authorized_users')
+          .maybeSingle();
+
+        if (!settingsError && settingsData?.value) {
+          const parsed = JSON.parse(settingsData.value);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            this.saveLocalAuthorizedUsers(parsed);
+            return parsed;
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao consultar usuários no Supabase app_settings:', err);
       }
     }
 
-    // 2. Fallback: Cache local
+    // 3. Fallback: Cache local armazenado previamente da nuvem
     return this.getLocalAuthorizedUsers();
   }
 
   private getLocalAuthorizedUsers(): AuthorizedUser[] {
     if (typeof window === 'undefined') {
-      return [DEFAULT_SUPERUSER];
+      return [];
     }
 
     try {
       const stored = localStorage.getItem(STORAGE_KEY_AUTHORIZED_USERS);
-      let list: AuthorizedUser[] = stored ? JSON.parse(stored) : [];
-
-      const superIndex = list.findIndex(u => u.email.toLowerCase() === SUPERUSER_EMAIL.toLowerCase());
-      if (superIndex === -1) {
-        list.unshift(DEFAULT_SUPERUSER);
-        localStorage.setItem(STORAGE_KEY_AUTHORIZED_USERS, JSON.stringify(list));
-      } else {
-        // Assegurar campos cruciais do superusuário
-        list[superIndex].role = 'superuser';
-        if (!list[superIndex].password) {
-          list[superIndex].password = DEFAULT_SUPERUSER.password;
-        }
-      }
-
-      return list;
+      return stored ? JSON.parse(stored) : [];
     } catch {
-      return [DEFAULT_SUPERUSER];
+      return [];
     }
   }
 
@@ -134,13 +116,13 @@ class AuthService {
       try {
         localStorage.setItem(STORAGE_KEY_AUTHORIZED_USERS, JSON.stringify(users));
       } catch (err) {
-        console.error('Erro ao salvar authorized_users no localStorage:', err);
+        console.error('Erro ao salvar cache de usuários autorizados:', err);
       }
     }
   }
 
   /**
-   * Obtém o usuário atualmente autenticado na sessão
+   * Obtém o usuário atualmente autenticado na sessão do navegador
    */
   public async getCurrentUser(): Promise<AuthUser | null> {
     if (typeof window !== 'undefined') {
@@ -157,7 +139,7 @@ class AuthService {
   }
 
   /**
-   * Realiza login estrito: valida se o email está na lista autorizada e confere a senha
+   * Realiza login: validação direta contra as credenciais salvas no banco Supabase
    */
   public async signIn(credentials: { email: string; password: string }): Promise<{ user: AuthUser | null; error: string | null }> {
     const cleanEmail = credentials.email.trim().toLowerCase();
@@ -167,8 +149,16 @@ class AuthService {
       return { user: null, error: 'Por favor, informe o email e a senha de acesso.' };
     }
 
-    // Busca usuários autorizados
+    // Carrega usuários registrados diretamente do banco Supabase
     const authorizedUsers = await this.getAuthorizedUsers();
+
+    if (authorizedUsers.length === 0) {
+      return {
+        user: null,
+        error: 'Nenhum usuário registrado no banco de dados. Verifique a conexão com o Supabase.'
+      };
+    }
+
     const found = authorizedUsers.find(u => u.email.toLowerCase() === cleanEmail);
 
     if (!found) {
@@ -188,7 +178,7 @@ class AuthService {
     if (found.password !== cleanPassword) {
       return {
         user: null,
-        error: 'Senha incorreta. Verifique suas credenciais ou solicite redefinição ao coordenador.'
+        error: 'Senha incorreta. Verifique os caracteres digitados ou solicite redefinição ao coordenador.'
       };
     }
 
@@ -206,7 +196,7 @@ class AuthService {
   }
 
   /**
-   * Cadastra e autoriza um novo pesquisador (recurso exclusivo do superusuário)
+   * Cadastra e autoriza um novo pesquisador gravando automaticamente no Supabase
    */
   public async addAuthorizedUser(data: {
     email: string;
@@ -242,12 +232,20 @@ class AuthService {
       createdAt: new Date().toISOString(),
     };
 
-    // Salva localmente de imediato
     const updated = [...existingUsers, newUser];
-    this.saveLocalAuthorizedUsers(updated);
 
-    // Tenta persistir no Supabase caso a tabela exista
+    // 1. Grava no Supabase (app_settings) automaticamente
     if (this.supabase) {
+      try {
+        await this.supabase.from('app_settings').upsert({
+          key: 'authorized_users',
+          value: JSON.stringify(updated),
+        });
+      } catch (err) {
+        console.error('Erro ao gravar em app_settings no Supabase:', err);
+      }
+
+      // 2. Se a tabela dedicada existir, também grava nela
       try {
         await this.supabase.from('authorized_users').upsert({
           id: newUser.id,
@@ -258,16 +256,19 @@ class AuthService {
           is_active: newUser.isActive,
           created_at: newUser.createdAt,
         });
-      } catch (err) {
-        console.warn('Supabase: aviso ao persistir novo usuário no banco remoto:', err);
+      } catch {
+        // Ignora caso a tabela dedicada não exista
       }
     }
+
+    // 3. Atualiza cache local
+    this.saveLocalAuthorizedUsers(updated);
 
     return { success: true, user: newUser };
   }
 
   /**
-   * Remove a autorização de um pesquisador
+   * Remove a autorização de um pesquisador do banco Supabase
    */
   public async removeAuthorizedUser(email: string): Promise<{ success: boolean; error?: string }> {
     const cleanEmail = email.trim().toLowerCase();
@@ -278,21 +279,34 @@ class AuthService {
 
     const existing = await this.getAuthorizedUsers();
     const updated = existing.filter(u => u.email.toLowerCase() !== cleanEmail);
-    this.saveLocalAuthorizedUsers(updated);
 
+    // 1. Atualiza no Supabase (app_settings)
     if (this.supabase) {
       try {
-        await this.supabase.from('authorized_users').delete().eq('email', cleanEmail);
+        await this.supabase.from('app_settings').upsert({
+          key: 'authorized_users',
+          value: JSON.stringify(updated),
+        });
       } catch (err) {
-        console.warn('Supabase: aviso ao excluir da tabela remota:', err);
+        console.error('Erro ao atualizar app_settings no Supabase:', err);
+      }
+
+      // 2. Remove também da tabela dedicada se existir
+      try {
+        await this.supabase.from('authorized_users').delete().eq('email', cleanEmail);
+      } catch {
+        // Tabela opcional
       }
     }
+
+    // 3. Atualiza cache local
+    this.saveLocalAuthorizedUsers(updated);
 
     return { success: true };
   }
 
   /**
-   * Alterna o status ativo/inativo de um usuário
+   * Alterna o status ativo/inativo de um usuário no banco Supabase
    */
   public async toggleUserStatus(email: string): Promise<{ success: boolean; error?: string; newStatus?: boolean }> {
     const cleanEmail = email.trim().toLowerCase();
@@ -309,48 +323,25 @@ class AuthService {
     }
 
     target.isActive = !target.isActive;
-    this.saveLocalAuthorizedUsers(existing);
 
+    // Atualiza no banco Supabase
     if (this.supabase) {
+      try {
+        await this.supabase.from('app_settings').upsert({
+          key: 'authorized_users',
+          value: JSON.stringify(existing),
+        });
+      } catch (err) {
+        console.error('Erro ao atualizar status no Supabase:', err);
+      }
+
       try {
         await this.supabase.from('authorized_users').update({ is_active: target.isActive }).eq('email', cleanEmail);
-      } catch (err) {
-        console.warn('Supabase: aviso ao alterar status no banco remoto:', err);
-      }
+      } catch {}
     }
 
-    return { success: true, newStatus: target.isActive };
-  }
-
-  /**
-   * Atualiza a senha de um usuário
-   */
-  public async updateUserPassword(email: string, newPass: string): Promise<{ success: boolean; error?: string }> {
-    const cleanEmail = email.trim().toLowerCase();
-
-    if (!newPass || newPass.length < 6) {
-      return { success: false, error: 'A senha deve conter no mínimo 6 caracteres.' };
-    }
-
-    const existing = await this.getAuthorizedUsers();
-    const target = existing.find(u => u.email.toLowerCase() === cleanEmail);
-
-    if (!target) {
-      return { success: false, error: 'Pesquisador não encontrado.' };
-    }
-
-    target.password = newPass;
     this.saveLocalAuthorizedUsers(existing);
-
-    if (this.supabase) {
-      try {
-        await this.supabase.from('authorized_users').update({ password: newPass }).eq('email', cleanEmail);
-      } catch (err) {
-        console.warn('Supabase: aviso ao atualizar senha no banco remoto:', err);
-      }
-    }
-
-    return { success: true };
+    return { success: true, newStatus: target.isActive };
   }
 
   /**

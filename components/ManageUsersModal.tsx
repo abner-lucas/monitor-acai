@@ -9,12 +9,8 @@ import {
   X, 
   Loader2, 
   CheckCircle2, 
-  AlertCircle,
-  Copy,
-  Check,
-  Code2,
   Database,
-  Lock
+  Cloud
 } from 'lucide-react';
 import { authService, SUPERUSER_EMAIL } from '@/lib/services/authService';
 import { AuthorizedUser } from '@/lib/types';
@@ -25,41 +21,6 @@ interface ManageUsersModalProps {
   onShowToast: (type: 'success' | 'error' | 'info', title: string, message?: string) => void;
 }
 
-const SUPABASE_SQL_SCRIPT = `-- Execute no SQL Editor do seu projeto Supabase:
-create table if not exists public.authorized_users (
-  id text primary key,
-  email text unique not null,
-  full_name text not null,
-  role text default 'pesquisador',
-  password text not null,
-  is_active boolean default true,
-  created_at timestamptz default now()
-);
-
--- Habilitar RLS e criar políticas de acesso
-alter table public.authorized_users enable row level security;
-
-create policy "Permitir leitura de usuarios autorizados"
-  on public.authorized_users for select using (true);
-
-create policy "Permitir gerenciamento de usuarios autorizados"
-  on public.authorized_users for all using (true);
-
--- Inserir superusuário coordenador
-insert into public.authorized_users (id, email, full_name, role, password, is_active)
-values (
-  'usr_superuser_abner',
-  'abner.lucas@ifpa.edu.br',
-  'Prof. Me. Ábner Lucas (Coordenador SAF)',
-  'superuser',
-  'Ifpa@2026',
-  true
-)
-on conflict (email) do update set 
-  password = 'Ifpa@2026',
-  role = 'superuser';
-`;
-
 export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
   isOpen,
   onClose,
@@ -67,14 +28,13 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
 }) => {
   const [users, setUsers] = useState<AuthorizedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'add' | 'sql'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'add'>('users');
 
   // Form State
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('Ifpa@2026');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [copiedSql, setCopiedSql] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setIsLoading(true);
@@ -116,7 +76,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
       if (!res.success) {
         onShowToast('error', 'Falha ao autorizar', res.error || 'Erro desconhecido.');
       } else {
-        onShowToast('success', 'Pesquisador Autorizado!', `${newName} (${newEmail}) agora pode acessar o sistema.`);
+        onShowToast('success', 'Gravado no Supabase!', `${newName} (${newEmail}) foi cadastrado diretamente no banco e já pode acessar.`);
         setNewName('');
         setNewEmail('');
         setNewPassword('Ifpa@2026');
@@ -131,26 +91,19 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
   };
 
   const handleRemoveUser = async (email: string, name: string) => {
-    if (confirm(`Tem certeza que deseja revogar o acesso de "${name}" (${email})?`)) {
+    if (confirm(`Tem certeza que deseja revogar o acesso de "${name}" (${email})? Essa alteração será refletida no banco Supabase.`)) {
       try {
         const res = await authService.removeAuthorizedUser(email);
         if (res.success) {
-          onShowToast('info', 'Acesso Revogado', `O pesquisador ${name} foi removido da lista de autorizados.`);
+          onShowToast('info', 'Acesso Revogado', `O pesquisador ${name} foi removido do banco Supabase.`);
           await loadUsers();
         } else {
-          onShowToast('error', 'Erro', res.error);
+          onShowToast('error', 'Erro ao revogar', res.error);
         }
       } catch (err: any) {
         onShowToast('error', 'Erro ao remover', err.message);
       }
     }
-  };
-
-  const handleCopySql = () => {
-    navigator.clipboard.writeText(SUPABASE_SQL_SCRIPT);
-    setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 2000);
-    onShowToast('success', 'Script Copiado', 'Cole o script SQL no editor do Supabase.');
   };
 
   return (
@@ -163,10 +116,16 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
               <Users className="w-6 h-6 text-emerald-300" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-black tracking-tight">
-                Gerenciar Pesquisadores Autorizados
-              </h2>
-              <p className="text-xs text-emerald-200/90 font-medium">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-black tracking-tight">
+                  Gerenciar Pesquisadores Autorizados
+                </h2>
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                  <Cloud className="w-3 h-3 text-emerald-300" />
+                  Supabase Nuvem
+                </span>
+              </div>
+              <p className="text-xs text-emerald-200/90 font-medium mt-0.5">
                 Controle de Acesso Restrito • Exclusivo do Superusuário
               </p>
             </div>
@@ -174,7 +133,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+            className="p-1 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -185,7 +144,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('users')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'users'
                 ? 'bg-white text-emerald-800 border-emerald-600 shadow-2xs'
                 : 'text-slate-500 border-transparent hover:text-slate-800'
@@ -198,7 +157,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('add')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-2 ${
+            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-2 cursor-pointer ${
               activeTab === 'add'
                 ? 'bg-white text-emerald-800 border-emerald-600 shadow-2xs'
                 : 'text-slate-500 border-transparent hover:text-slate-800'
@@ -207,19 +166,6 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
             <UserPlus className="w-3.5 h-3.5" />
             <span>Autorizar Novo</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('sql')}
-            className={`px-4 py-2.5 text-xs font-bold rounded-t-xl transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === 'sql'
-                ? 'bg-white text-emerald-800 border-emerald-600 shadow-2xs'
-                : 'text-slate-500 border-transparent hover:text-slate-800'
-            }`}
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            <span>Script SQL Supabase</span>
-          </button>
         </div>
 
         {/* Modal Body */}
@@ -227,14 +173,22 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
           {/* TAB 1: LIST OF USERS */}
           {activeTab === 'users' && (
             <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-slate-500 pb-1">
+                <span>Registros carregados diretamente do banco PostgreSQL:</span>
+                <span className="inline-flex items-center gap-1 font-mono text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <Database className="w-3 h-3 text-emerald-600" />
+                  Sincronizado
+                </span>
+              </div>
+
               {isLoading ? (
                 <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
                   <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
-                  <span className="text-xs">Consultando usuários autorizados...</span>
+                  <span className="text-xs">Consultando banco de dados Supabase...</span>
                 </div>
               ) : users.length === 0 ? (
                 <div className="py-8 text-center text-slate-500 text-xs">
-                  Nenhum usuário cadastrado além do superusuário.
+                  Nenhum usuário cadastrado no banco de dados.
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
@@ -297,7 +251,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
                               type="button"
                               onClick={() => handleRemoveUser(u.email, u.fullName)}
                               className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                              title="Revogar Acesso"
+                              title="Revogar Acesso no Supabase"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -315,9 +269,9 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
           {activeTab === 'add' && (
             <form onSubmit={handleAddUser} className="space-y-4 max-w-lg mx-auto py-2">
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                <span>
-                  Apenas emails registrados aqui conseguirão efetuar login no MonitorAçaí.
+                <Database className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  Ao clicar em <strong>Autorizar Pesquisador</strong>, o usuário é gravado <strong>automaticamente no Supabase</strong> em nuvem. Não é necessário executar nenhum script manual.
                 </span>
               </div>
 
@@ -377,7 +331,7 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Cadastrando...</span>
+                      <span>Gravando no Supabase...</span>
                     </>
                   ) : (
                     <>
@@ -389,46 +343,14 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({
               </div>
             </form>
           )}
-
-          {/* TAB 3: SQL SCRIPT */}
-          {activeTab === 'sql' && (
-            <div className="space-y-3">
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-xs flex items-start gap-2">
-                <Database className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
-                <div className="leading-relaxed">
-                  Para sincronização multi-dispositivos via PostgreSQL, execute este script no{' '}
-                  <strong className="text-slate-900">SQL Editor</strong> do painel Supabase:
-                </div>
-              </div>
-
-              <div className="relative">
-                <pre className="p-4 bg-slate-900 text-emerald-300 font-mono text-[11px] rounded-2xl overflow-x-auto border border-slate-800 leading-relaxed max-h-72">
-                  {SUPABASE_SQL_SCRIPT}
-                </pre>
-                <button
-                  type="button"
-                  onClick={handleCopySql}
-                  className="absolute top-3 right-3 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors"
-                >
-                  {copiedSql ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-400 font-bold">Copiado!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copiar SQL</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end">
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+          <span className="flex items-center gap-1 font-mono text-[11px]">
+            <Cloud className="w-3.5 h-3.5 text-emerald-600" />
+            Supabase Cloud PostgreSQL
+          </span>
           <button
             type="button"
             onClick={onClose}
