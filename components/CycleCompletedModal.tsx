@@ -9,6 +9,7 @@ interface CycleCompletedModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentCycle: number;
+  nomeUnidade: string;
   onStartNewCycle: () => void;
 }
 
@@ -16,6 +17,7 @@ export const CycleCompletedModal: React.FC<CycleCompletedModalProps> = ({
   isOpen,
   onClose,
   currentCycle,
+  nomeUnidade,
   onStartNewCycle,
 }) => {
   useEffect(() => {
@@ -58,7 +60,7 @@ export const CycleCompletedModal: React.FC<CycleCompletedModalProps> = ({
         </h3>
 
         <p className="text-sm text-slate-600 leading-relaxed mb-6">
-          Todas as <strong>{TOTAL_POSITIONS} posições</strong> do SAF de Açaí do IFPA Breves foram monitoradas ao longo das <strong>{TOTAL_WEEKS} semanas</strong> do ciclo de amostragem sem reposição.
+          Todas as <strong>{TOTAL_POSITIONS} posições</strong> do SAF de Açaí de {nomeUnidade} foram monitoradas ao longo das <strong>{TOTAL_WEEKS} semanas</strong> do ciclo de amostragem sem reposição.
         </p>
 
         {/* Stats Summary */}

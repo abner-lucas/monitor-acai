@@ -1,18 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Map, 
-  LayoutGrid, 
-  Info, 
-  CheckCircle2, 
-  Clock, 
-  Radio, 
+import React, { useState, useRef } from 'react';
+import {
+  Map,
+  LayoutGrid,
+  Info,
+  CheckCircle2,
+  Clock,
+  Radio,
   ChevronRight,
   ExternalLink,
   Eye
 } from 'lucide-react';
+import { AnimatePresence, motion, useInView, useReducedMotion } from 'motion/react';
 import { PositionInfo, RotationRecord, PositionStatus } from '@/lib/types';
+import { AbasDeslizantes } from '@/components/vivo/AbasDeslizantes';
 import { POSITIONS_DATA, CELLS_METADATA } from '@/lib/constants';
 import { getPositionStatusInCycle, formatDateBR } from '@/lib/storage';
 
@@ -22,7 +24,10 @@ interface SafVisualMapProps {
   selectedPositionId: number | null;
   onSelectPosition: (positionId: number) => void;
   onOpenRaffle: () => void;
-  preferredViewMode?: 'schematic' | 'grid';
+  /** Nome da unidade piloto mostrado no texto do mapa. */
+  local: string;
+  /** Abre o relatório de campo do rodízio da planta selecionada. */
+  onOpenReport?: (recordId: string) => void;
 }
 
 export const SafVisualMap: React.FC<SafVisualMapProps> = ({
@@ -31,15 +36,16 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
   selectedPositionId,
   onSelectPosition,
   onOpenRaffle,
-  preferredViewMode,
+  local,
+  onOpenReport,
 }) => {
-  const [viewMode, setViewMode] = useState<'schematic' | 'grid'>(preferredViewMode || 'schematic');
-
-  useEffect(() => {
-    if (preferredViewMode) {
-      setViewMode(preferredViewMode);
-    }
-  }, [preferredViewMode]);
+  const [viewMode, setViewMode] = useState<'schematic' | 'grid'>('schematic');
+  const reduzir = useReducedMotion();
+  const EASE_VIVA = [0.16, 1, 0.3, 1] as const;
+  // O mapa rola na horizontal no celular: a animação parte da área do mapa inteira,
+  // não de cada elemento, senão as plantas fora da faixa visível nunca apareceriam.
+  const refMapa = useRef<HTMLDivElement>(null);
+  const mapaEmVista = useInView(refMapa, { once: true, amount: 0.25 });
 
   const selectedPosition = POSITIONS_DATA.find((p) => p.id === selectedPositionId);
   const selectedPositionRecord = records.find(
@@ -122,67 +128,48 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
   ];
 
   return (
-    <div id="saf-visual-matrix" className="bg-white rounded-2xl border border-slate-200/90 shadow-xs mb-8 overflow-hidden">
+    <section id="saf-visual-matrix" aria-labelledby="titulo-mapa-saf" className="scroll-mt-24 mb-12 overflow-hidden rounded-[28px] bg-white ring-1 ring-folha-100">
       {/* Panel Header */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
+      <div className="flex flex-col justify-between gap-4 px-5 pt-6 pb-4 sm:flex-row sm:items-end sm:px-7">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-              Matriz de Monitoramento Visual do SAF
-            </h2>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
-              Campus Breves
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            6 Células Triangulares • 18 Plantas • Rodízio quinzenal de 14 dias com sensores IoT
+          <h2 id="titulo-mapa-saf" className="font-display text-2xl font-semibold tracking-tight text-grafite sm:text-3xl">
+            Planta baixa do SAF
+          </h2>
+          <p className="mt-1 max-w-xl text-sm text-slate-600">
+            6 células triangulares e 18 plantas no açaizal de {local}. Toque em um número para ver a planta.
           </p>
         </div>
 
-        {/* View Switcher Tabs */}
-        <div className="flex items-center bg-slate-200/80 p-1 rounded-xl text-xs font-medium self-start sm:self-auto">
-          <button
-            onClick={() => setViewMode('schematic')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-              viewMode === 'schematic'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Map className="w-3.5 h-3.5 text-emerald-700" />
-            <span>Mapa Esquemático</span>
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
-              viewMode === 'grid'
-                ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5 text-emerald-700" />
-            <span>Grade de Células</span>
-          </button>
-        </div>
+        <AbasDeslizantes
+          grupo="mapa-saf"
+          rotuloGrupo="Forma de visualizar o SAF"
+          abas={[
+            { id: 'schematic', rotulo: 'Planta baixa', icone: Map },
+            { id: 'grid', rotulo: 'Por célula', icone: LayoutGrid },
+          ]}
+          ativa={viewMode}
+          onMudar={setViewMode}
+        />
       </div>
 
       {/* Main View Area */}
-      <div className="p-4 sm:p-6">
+      <div className="px-3 pb-5 sm:px-6 sm:pb-7">
         {/* VIEW 1: SCHEMATIC SVG MAP */}
         {viewMode === 'schematic' && (
           <div className="space-y-4">
-            <div className="relative w-full overflow-x-auto bg-slate-50/70 rounded-2xl border border-slate-200 p-2 sm:p-4">
+            <div ref={refMapa} className="papel-desenho relative w-full overflow-x-auto rounded-[20px] ring-1 ring-papel-linha p-2 sm:p-4">
               <div className="min-w-[800px] w-full max-w-[1020px] mx-auto">
                 <svg
                   viewBox="0 0 1060 620"
                   className="w-full h-auto select-none"
+                  aria-label="Planta baixa do SAF com as 6 células triangulares e as 18 posições de plantas"
                   style={{ maxHeight: '550px' }}
                 >
                   <defs>
                     {/* Active Pulsing Radial Glow */}
                     <radialGradient id="activeGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
-                      <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#6cc36a" stopOpacity="0.85" />
+                      <stop offset="100%" stopColor="#2a7457" stopOpacity="0" />
                     </radialGradient>
                   </defs>
 
@@ -215,17 +202,21 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                   {TRIANGLES.map((tri) => (
                     <g key={`cell-tri-${tri.cellId}`}>
                       {/* Triangular perimeter polygon */}
-                      <polygon
+                      <motion.polygon
                         points={tri.points}
-                        fill="rgba(239, 68, 68, 0.04)"
-                        stroke="#dc2626"
+                        fill="rgba(194, 54, 43, 0.05)"
+                        stroke="#c2362b"
                         strokeWidth="3.5"
                         strokeLinejoin="round"
+                        strokeLinecap="round"
+                        initial={reduzir ? false : { pathLength: 0, fillOpacity: 0 }}
+                        animate={mapaEmVista ? { pathLength: 1, fillOpacity: 1 } : undefined}
+                        transition={{ duration: 0.8, ease: EASE_VIVA, delay: tri.cellId * 0.06 }}
                       />
 
                       {/* Datalogger Stem (Purple Circle in center) */}
                       <g transform={`translate(${tri.logger.x}, ${tri.logger.y})`}>
-                        <circle cx="0" cy="0" r="14" fill="#a855f7" stroke="#7e22ce" strokeWidth="2.5" />
+                        <circle cx="0" cy="0" r="14" fill="#523159" stroke="#2a1730" strokeWidth="2.5" />
                         <circle cx="0" cy="0" r="5" fill="#ffffff" />
                         <text
                           x="0"
@@ -233,7 +224,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                           textAnchor="middle"
                           fontSize="9"
                           fontWeight="bold"
-                          fill="#6b21a8"
+                          fill="#3b2242"
                         >
                           Haste {tri.cellId}
                         </text>
@@ -244,10 +235,10 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                         x={tri.logger.x}
                         y={tri.cellId <= 3 ? 100 : 540}
                         textAnchor="middle"
-                        fontSize="13"
-                        fontWeight="800"
-                        fill="#334155"
-                        className="tracking-wider uppercase"
+                        fontSize="15"
+                        fontWeight="600"
+                        fill="#24302b"
+                        style={{ fontFamily: 'var(--font-display)' }}
                       >
                         {tri.label}
                       </text>
@@ -261,20 +252,21 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
 
                     // Color theme per status
                     let fillColor = '#ffffff';
-                    let strokeColor = '#94a3b8';
-                    let textColor = '#334155';
-                    let badgeBg = '#f1f5f9';
+                    let strokeColor = '#8a9a90';
+                    let textColor = '#24302b';
 
                     if (status === 'active') {
-                      fillColor = '#ecfdf5';
-                      strokeColor = '#059669';
-                      textColor = '#065f46';
-                      badgeBg = '#10b981';
+                      fillColor = '#e3f5e1';
+                      strokeColor = '#1f5e45';
+                      textColor = '#143f2e';
                     } else if (status === 'completed') {
-                      fillColor = '#eff6ff';
-                      strokeColor = '#2563eb';
-                      textColor = '#1e40af';
-                      badgeBg = '#3b82f6';
+                      fillColor = '#dcecf6';
+                      strokeColor = '#1f5f88';
+                      textColor = '#1f5f88';
+                    } else if (status === 'scheduled') {
+                      fillColor = '#f1e7f2';
+                      strokeColor = '#523159';
+                      textColor = '#3b2242';
                     }
 
                     return (
@@ -282,9 +274,24 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                         key={`pos-node-${pos.id}`}
                         transform={`translate(${pos.coordinates.x}, ${pos.coordinates.y})`}
                         onClick={() => onSelectPosition(pos.id)}
-                        className="cursor-pointer transition-transform hover:scale-110"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            onSelectPosition(pos.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isSelected}
+                        aria-label={`Posição ${pos.formattedId}, célula ${pos.cellId}, planta ${pos.plantIndex}: ${status === 'active' ? 'sensor ativo' : status === 'completed' ? 'concluída' : status === 'scheduled' ? 'sorteada para a próxima troca' : 'disponível'}`}
+                        className="cursor-pointer outline-none transition-transform duration-300 hover:scale-110 focus-visible:scale-110"
                         style={{ transformOrigin: `${pos.coordinates.x}px ${pos.coordinates.y}px` }}
                       >
+                        <motion.g
+                          initial={reduzir ? false : { opacity: 0, scale: 0.4 }}
+                          animate={mapaEmVista ? { opacity: 1, scale: 1 } : undefined}
+                          transition={{ duration: 0.45, ease: EASE_VIVA, delay: 0.2 + pos.id * 0.02 }}
+                        >
                         {/* Active Sensor Pulse Glow */}
                         {status === 'active' && (
                           <circle cx="0" cy="0" r="32" fill="url(#activeGlow)">
@@ -310,7 +317,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                             cy="0"
                             r="30"
                             fill="none"
-                            stroke="#0284c7"
+                            stroke="#523159"
                             strokeWidth="3"
                             strokeDasharray="6,4"
                           >
@@ -331,10 +338,11 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                           y="-20"
                           width="40"
                           height="40"
-                          rx="8"
+                          rx="10"
                           fill={fillColor}
                           stroke={strokeColor}
                           strokeWidth={isSelected ? '3.5' : '2.5'}
+                          strokeDasharray={status === 'scheduled' ? '5 3' : undefined}
                           filter="drop-shadow(0 2px 4px rgba(0,0,0,0.08))"
                         />
 
@@ -343,20 +351,20 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                           x="0"
                           y="5"
                           textAnchor="middle"
-                          fontSize="16"
-                          fontWeight="900"
-                          fontFamily="monospace"
+                          fontSize="17"
+                          fontWeight="600"
                           fill={textColor}
+                          style={{ fontFamily: 'var(--font-display)', fontVariantNumeric: 'tabular-nums' }}
                         >
                           {pos.formattedId}
                         </text>
 
                         {/* Small Status Dot or Checkmark */}
                         {status === 'active' && (
-                          <circle cx="16" cy="-16" r="6" fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
+                          <circle cx="16" cy="-16" r="6" fill="#6cc36a" stroke="#ffffff" strokeWidth="1.5" />
                         )}
                         {status === 'completed' && (
-                          <circle cx="16" cy="-16" r="6" fill="#2563eb" stroke="#ffffff" strokeWidth="1.5" />
+                          <circle cx="16" cy="-16" r="6" fill="#1f5f88" stroke="#ffffff" strokeWidth="1.5" />
                         )}
 
                         {/* Bottom Tag */}
@@ -380,6 +388,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                         >
                           P{pos.plantIndex}
                         </text>
+                        </motion.g>
                       </g>
                     );
                   })}
@@ -388,33 +397,34 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
             </div>
 
             {/* Interactive Legend Matching the Engineering Drawing */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-4 px-1 text-sm">
               <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-emerald-700 animate-pulse" />
-                  <span className="text-slate-700 font-medium">Posição Ativa (com sensor)</span>
+                  <span className="w-3.5 h-3.5 rounded-md bg-broto-100 border-2 border-folha-700" />
+                  <span className="text-slate-700 font-medium">Com sensor agora</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded-full bg-blue-500 border-2 border-blue-700" />
-                  <span className="text-slate-700 font-medium">Concluída no Ciclo</span>
+                  <span className="w-3.5 h-3.5 rounded-md bg-agua-100 border-2 border-agua-700" />
+                  <span className="text-slate-700 font-medium">Concluída no ciclo</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded-md bg-white border-2 border-slate-300" />
-                  <span className="text-slate-700 font-medium">Disponível para Sorteio</span>
+                  <span className="w-3.5 h-3.5 rounded-md bg-acai-100 border-2 border-dashed border-acai-700" />
+                  <span className="text-slate-700 font-medium">Sorteada (próxima troca)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-3.5 rounded-full bg-purple-500 border border-purple-700" />
-                  <span className="text-slate-700 font-medium">Haste do Datalogger</span>
+                  <span className="w-3.5 h-3.5 rounded-md bg-white border-2 border-[#8a9a90]" />
+                  <span className="text-slate-700 font-medium">Disponível para sorteio</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-3.5 h-1 bg-red-600 rounded-full" />
-                  <span className="text-slate-700 font-medium">Limite da Célula Triângular</span>
+                  <span className="w-3.5 h-3.5 rounded-full bg-acai-700 border border-acai-900" />
+                  <span className="text-slate-700 font-medium">Haste do datalogger</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-1 bg-lapis rounded-full" />
+                  <span className="text-slate-700 font-medium">Limite da célula triangular</span>
                 </div>
               </div>
 
-              <div className="text-xs text-slate-600 font-medium">
-                * Clique em qualquer número para inspecionar os detalhes da planta
-              </div>
             </div>
           </div>
         )}
@@ -429,24 +439,27 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
               );
 
               return (
-                <div
+                <motion.div
                   key={cell.id}
-                  className={`rounded-xl border p-4 transition-all ${
+                  initial={reduzir ? false : { opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: EASE_VIVA, delay: cell.id * 0.06 }}
+                  className={`rounded-[20px] p-4 transition-colors ${
                     activeInCell
-                      ? 'border-emerald-500 bg-emerald-50/30 shadow-xs'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
+                      ? 'bg-broto-100/60 ring-2 ring-folha-700/60'
+                      : 'bg-folha-50/60 ring-1 ring-folha-100 hover:ring-folha-600/30'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900">{cell.name}</span>
-                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                      <span className="font-display text-lg font-semibold text-grafite">{cell.name}</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-white text-slate-700 ring-1 ring-papel-linha">
                         {cell.dataloggerId}
                       </span>
                     </div>
                     {activeInCell && (
-                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
-                        Sensor Ativo
+                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-folha-700 text-white">
+                        Sensor ativo
                       </span>
                     )}
                   </div>
@@ -464,18 +477,29 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                         <div
                           key={pos.id}
                           onClick={() => onSelectPosition(pos.id)}
-                          className={`flex items-center justify-between p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onSelectPosition(pos.id);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={isSelected}
+                          className={`flex items-center justify-between p-2.5 rounded-xl text-sm cursor-pointer transition-colors ${
                             isSelected
-                              ? 'border-blue-500 bg-blue-50'
+                              ? 'bg-white ring-2 ring-acai-700'
                               : status === 'active'
-                              ? 'border-emerald-300 bg-emerald-50 text-emerald-950 font-medium'
+                              ? 'bg-white ring-1 ring-folha-600/40 font-medium'
                               : status === 'completed'
-                              ? 'border-blue-200 bg-blue-50/50 text-slate-700'
-                              : 'border-slate-100 bg-slate-50/60 hover:bg-slate-100 text-slate-700'
+                              ? 'bg-agua-100/60 text-slate-700'
+                              : status === 'scheduled'
+                              ? 'bg-acai-100/70 text-slate-700'
+                              : 'bg-white/70 hover:bg-white text-slate-700'
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-white border border-slate-200 flex items-center justify-center font-mono font-bold text-slate-800">
+                            <span className="w-8 h-8 rounded-lg bg-white ring-1 ring-papel-linha flex items-center justify-center font-display font-semibold text-grafite tabular-nums">
                               {pos.formattedId}
                             </span>
                             <div>
@@ -483,6 +507,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                               <span className="text-xs text-slate-600">
                                 {status === 'active' && posRecord && `Instalado em ${formatDateBR(posRecord.installedAt)}`}
                                 {status === 'completed' && posRecord && `Coletado em ${formatDateBR(posRecord.removedAt || posRecord.installedAt)}`}
+                                {status === 'scheduled' && posRecord && `Troca prevista em ${formatDateBR(posRecord.installedAt)}`}
                                 {status === 'available' && 'Aguardando sorteio'}
                               </span>
                             </div>
@@ -490,15 +515,20 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
 
                           <div className="flex items-center gap-1.5">
                             {status === 'active' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white">
-                                <Radio className="w-3 h-3 animate-ping" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-folha-700 text-white">
+                                <Radio className="w-3 h-3" />
                                 Monitorando
                               </span>
                             )}
                             {status === 'completed' && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-                                <CheckCircle2 className="w-3 h-3 text-blue-600" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-agua-100 text-agua-700">
+                                <CheckCircle2 className="w-3 h-3" />
                                 Concluída
+                              </span>
+                            )}
+                            {status === 'scheduled' && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold text-acai-800 border border-dashed border-acai-700">
+                                Sorteada
                               </span>
                             )}
                             {status === 'available' && (
@@ -511,25 +541,32 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                       );
                     })}
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         )}
 
         {/* Selected Position Detail Card */}
+        <AnimatePresence mode="wait">
         {selectedPosition && (
-          <div 
+          <motion.div
+            key={selectedPosition.id}
             id="saf-selected-position-card"
-            className="mt-5 p-4 rounded-xl bg-slate-50 border-2 border-emerald-500/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all"
+            aria-live="polite"
+            initial={reduzir ? false : { opacity: 0, y: 14, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduzir ? undefined : { opacity: 0, y: 8 }}
+            transition={{ duration: 0.35, ease: EASE_VIVA }}
+            className="mt-5 p-4 rounded-[20px] bg-acai-100/60 ring-1 ring-acai-300/60 flex flex-col md:flex-row md:items-center justify-between gap-4"
           >
             <div className="flex items-start sm:items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-mono font-extrabold text-xl text-slate-900 shadow-xs">
+              <div className="w-14 h-14 shrink-0 rounded-2xl bg-acai-900 flex items-center justify-center font-display font-semibold text-2xl text-white tabular-nums">
                 {selectedPosition.formattedId}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-slate-900 text-sm sm:text-base">
+                  <h4 className="font-display font-semibold text-grafite text-base sm:text-lg">
                     Célula {selectedPosition.cellId} • Planta {selectedPosition.plantIndex} (Posição {selectedPosition.formattedId})
                   </h4>
                   {selectedPositionStatus === 'active' && (
@@ -542,6 +579,11 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                       Concluído no Ciclo {currentCycle}
                     </span>
                   )}
+                  {selectedPositionStatus === 'scheduled' && (
+                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full text-acai-800 border border-dashed border-acai-700">
+                      Sorteada para a próxima troca
+                    </span>
+                  )}
                   {selectedPositionStatus === 'available' && (
                     <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-200 text-slate-700">
                       Disponível para Sorteio
@@ -550,17 +592,26 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                 </div>
                 <p className="text-xs text-slate-600 mt-0.5">
                   Célula {selectedPosition.cellId} ({CELLS_METADATA.find(c => c.id === selectedPosition.cellId)?.name}) • Planta {selectedPosition.plantIndex}
-                  {selectedPositionRecord && ` • Instalado em: ${formatDateBR(selectedPositionRecord.installedAt)}`}
+                  {selectedPositionRecord && (selectedPositionStatus === 'scheduled' ? ` • Troca prevista em: ${formatDateBR(selectedPositionRecord.installedAt)}` : ` • Instalado em: ${formatDateBR(selectedPositionRecord.installedAt)}`)}
                   {selectedPositionRecord?.removedAt && ` • Coletado em: ${formatDateBR(selectedPositionRecord.removedAt)}`}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2 self-end md:self-auto">
+              {selectedPositionRecord && selectedPositionStatus !== 'scheduled' && onOpenReport && (
+                <button
+                  onClick={() => onOpenReport(selectedPositionRecord.id)}
+                  className="min-h-10 px-4 py-2 text-sm font-semibold bg-acai-900 hover:bg-acai-800 text-white rounded-full transition-colors flex items-center gap-1.5 active:scale-[0.97] cursor-pointer"
+                >
+                  Relatório
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
               {selectedPositionStatus === 'available' && (
                 <button
                   onClick={onOpenRaffle}
-                  className="px-3 py-1.5 text-xs font-semibold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg transition-colors flex items-center gap-1.5"
+                  className="min-h-10 px-4 py-2 text-sm font-semibold bg-folha-700 hover:bg-folha-800 text-white rounded-full transition-colors flex items-center gap-1.5 active:scale-[0.97]"
                 >
                   Sortear Agora
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -569,14 +620,15 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
               <button
                 onClick={() => onSelectPosition(0)}
                 aria-label="Fechar detalhes da planta selecionada"
-                className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                className="min-h-10 px-4 py-2 text-sm font-medium text-slate-700 hover:text-grafite bg-white rounded-full ring-1 ring-acai-300/60 hover:bg-acai-100 transition-colors"
               >
                 Fechar
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
-    </div>
+    </section>
   );
 };

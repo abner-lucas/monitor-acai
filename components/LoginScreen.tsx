@@ -1,22 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Sprout, 
-  Lock, 
-  Mail, 
-  Eye, 
-  EyeOff, 
-  Loader2, 
-  ShieldCheck, 
-  AlertCircle, 
+import {
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  Loader2,
+  AlertCircle,
   ArrowRight,
-  Database,
   MapPin,
   HelpCircle
 } from 'lucide-react';
 import { authService } from '@/lib/services/authService';
 import { AuthUser } from '@/lib/types';
+import { MarcaAcai } from '@/components/vivo/MarcaAcai';
+import { CelulaDesenhada } from '@/components/vivo/CelulaDesenhada';
 
 interface LoginScreenProps {
   onAuthSuccess: (user: AuthUser) => void;
@@ -26,7 +25,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onAuthSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -56,43 +55,34 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onAuthSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden">
-      {/* Background Subtle Ambient Glow */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="grao min-h-screen bg-acai-950 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden">
+      {/* Uma célula da planta baixa se desenhando ao fundo */}
+      <CelulaDesenhada className="pointer-events-none absolute -left-24 top-1/2 w-[640px] max-w-none -translate-y-1/2 opacity-60 sm:left-[4%]" />
 
       {/* Main Authentication Card */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-300">
+      <div className="w-full max-w-md bg-white rounded-[28px] shadow-2xl overflow-hidden relative z-10 animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-700">
         {/* Card Header */}
-        <div className="bg-gradient-to-br from-emerald-700 to-emerald-900 p-6 sm:p-7 text-white text-center relative">
-          <div className="w-14 h-14 bg-white/10 rounded-2xl border border-white/20 flex items-center justify-center mx-auto mb-3 backdrop-blur shadow-inner">
-            <Sprout className="w-8 h-8 text-emerald-300" />
+        <div className="px-7 pt-8 pb-2">
+          <div className="flex items-center gap-3">
+            <MarcaAcai className="h-12 w-11 shrink-0" />
+            <div>
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-grafite">MonitorAçaí</h1>
+              <p className="flex items-center gap-1 text-sm text-slate-600">
+                <MapPin className="h-3.5 w-3.5 text-folha-600" />
+                SAF de açaí do IFPA Campus Breves
+              </p>
+            </div>
           </div>
-
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-            MonitorAçaí
-          </h1>
-          <p className="text-xs text-emerald-100/90 mt-1 font-medium">
-            Gestão de Rodízio de Sensores IoT no SAF
+          <p className="mt-5 text-sm text-slate-700">
+            Entre com o email autorizado pelo coordenador para registrar e acompanhar o rodízio dos sensores.
           </p>
-
-          <div className="flex items-center justify-center gap-1.5 mt-3 text-xs text-emerald-200/90 font-medium">
-            <MapPin className="w-3.5 h-3.5 text-emerald-300" />
-            <span>IFPA Campus Breves (Marajó/PA)</span>
-          </div>
-        </div>
-
-        {/* Security Subheader */}
-        <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600">
-          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>Acesso Restrito a Pesquisadores Autorizados</span>
         </div>
 
         {/* Form Body */}
-        <div className="p-6 sm:p-7 space-y-4">
+        <div className="px-7 pt-4 pb-7 space-y-4">
           {/* Status / Alert Message */}
           {errorMessage && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-start gap-2.5 animate-in fade-in">
+            <div role="alert" className="p-3 bg-rose-50 rounded-2xl text-rose-800 text-sm flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
               <div className="leading-relaxed">{errorMessage}</div>
             </div>
@@ -101,43 +91,45 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onAuthSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Email Institucional Autorizado
+              <label htmlFor="login-email" className="block text-sm font-medium text-slate-800 mb-1.5">
+                Email institucional
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
+                  id="login-email"
                   type="email"
                   required
                   autoComplete="email"
                   placeholder="pesquisador@ifpa.edu.br"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all shadow-xs"
+                  className="w-full min-h-11 pl-10 pr-3 py-2.5 text-sm rounded-2xl bg-papel/70 border border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-folha-600 transition-colors"
                 />
               </div>
             </div>
 
             {/* Password Field */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Senha de Acesso
+              <label htmlFor="login-senha" className="block text-sm font-medium text-slate-800 mb-1.5">
+                Senha
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                 <input
+                  id="login-senha"
                   type={showPassword ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-transparent transition-all shadow-xs"
+                  className="w-full min-h-11 pl-10 pr-11 py-2.5 text-sm rounded-2xl bg-papel/70 border border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-folha-600 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors p-0.5"
+                  className="absolute right-1.5 top-1 w-9 h-9 flex items-center justify-center rounded-full text-slate-500 hover:text-grafite hover:bg-white transition-colors"
                   tabIndex={-1}
                   aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
                 >
@@ -154,7 +146,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onAuthSuccess }) => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-2.5 px-4 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all disabled:opacity-70 cursor-pointer"
+              className="group w-full mt-2 min-h-12 py-3 px-4 bg-acai-900 hover:bg-acai-800 text-white font-semibold text-sm rounded-full flex items-center justify-center gap-2 transition-colors active:scale-[0.98] disabled:opacity-70 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -163,33 +155,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onAuthSuccess }) => {
                 </>
               ) : (
                 <>
-                  <span>Entrar no Sistema</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Entrar</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </>
               )}
             </button>
           </form>
 
           {/* Access Policy Notice */}
-          <div className="p-3 bg-slate-50 border border-slate-200/70 rounded-xl flex items-start gap-2.5 text-xs text-slate-600">
-            <HelpCircle className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 text-sm text-slate-600">
+            <HelpCircle className="w-4 h-4 text-folha-600 shrink-0 mt-0.5" />
             <div className="leading-relaxed">
-              O cadastro é restrito. Caso necessite de acesso ao sistema do SAF, solicite autorização ao coordenador <strong>Ábner Lucas</strong>.
+              Ainda não tem acesso? Peça autorização ao coordenador <strong className="font-semibold text-grafite">Ábner Lucas</strong>.
             </div>
           </div>
         </div>
 
-        {/* Card Footer Badge */}
-        <div className="bg-slate-50 px-6 py-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-          <span className="flex items-center gap-1.5 font-medium">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            IFPA • SAF Agroecológico
-          </span>
-          <span className="flex items-center gap-1 text-xs font-mono text-slate-500">
-            <Database className="w-3 h-3 text-emerald-600" />
-            MySQL Hostinger
-          </span>
-        </div>
       </div>
     </div>
   );

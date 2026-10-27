@@ -1,1 +1,127 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Identidade "planta baixa de campo": papel de desenho técnico, lápis vermelho
+ * nos limites das células (como no croqui original) e o roxo do fruto do açaí
+ * como superfície escura do painel ao vivo.
+ */
+@theme {
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-public-sans), ui-sans-serif, sans-serif;
+
+  --color-acai-950: #1c0f20;
+  --color-acai-900: #2a1730;
+  --color-acai-800: #3b2242;
+  --color-acai-700: #523159;
+  --color-acai-300: #c9a9cf;
+  --color-acai-100: #f1e7f2;
+
+  --color-folha-900: #143f2e;
+  --color-folha-800: #1a4d39;
+  --color-folha-700: #1f5e45;
+  --color-folha-600: #2a7457;
+  --color-folha-100: #dcebe2;
+  --color-folha-50: #eef6f1;
+
+  --color-broto-500: #6cc36a;
+  --color-broto-400: #8fd88b;
+  --color-broto-100: #e3f5e1;
+
+  --color-agua-700: #1f5f88;
+  --color-agua-600: #2f7fb0;
+  --color-agua-100: #dcecf6;
+
+  --color-papel: #eef3ee;
+  --color-papel-linha: #d7e2d9;
+  --color-grafite: #24302b;
+  --color-lapis: #c2362b;
+
+  --ease-viva: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Janelas (sorteio, registro, equipe...) ainda usam a escala emerald: ela passa
+     a apontar para os verdes de folha e broto, deixando tudo no mesmo tom. */
+  --color-emerald-50: #eef6f1;
+  --color-emerald-100: #dcebe2;
+  --color-emerald-200: #bfd9c9;
+  --color-emerald-300: #9cc4ad;
+  --color-emerald-400: #8fd88b;
+  --color-emerald-500: #4f9e6c;
+  --color-emerald-600: #2a7457;
+  --color-emerald-700: #1f5e45;
+  --color-emerald-800: #1a4d39;
+  --color-emerald-900: #143f2e;
+  --color-emerald-950: #0d2a1f;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+}
+
+html {
+  overflow-x: clip;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+/* Papel milimetrado da planta baixa: grade fina + grade principal a cada 5 quadros. */
+.papel-desenho {
+  background-color: #f7faf6;
+  background-image:
+    linear-gradient(var(--color-papel-linha) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-papel-linha) 1px, transparent 1px),
+    linear-gradient(rgb(215 226 217 / 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(215 226 217 / 0.45) 1px, transparent 1px);
+  background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  background-position: -1px -1px;
+}
+
+/* Grão discreto para o painel escuro (evita a superfície chapada). */
+.grao {
+  position: relative;
+  isolation: isolate;
+}
+.grao::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.08;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-folha-600);
+  outline-offset: 2px;
+}
+
+/* Relatório de campo: folha A4 pronta para "Salvar como PDF" e assinar no gov.br. */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 14mm 16mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

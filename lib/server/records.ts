@@ -2,9 +2,11 @@ import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { getDb } from './db';
 import { ValidationError } from './http';
 import type { RotationRecord } from '../types';
+import { UNIDADES, type UnidadeId } from '../unidades';
 
 interface RecordRow extends RowDataPacket {
   id: string;
+  site: UnidadeId;
   cycle_number: number;
   position_id: number;
   cell_id: number;
@@ -24,6 +26,7 @@ interface RecordRow extends RowDataPacket {
 function toRecord(row: RecordRow): RotationRecord {
   return {
     id: row.id,
+    site: row.site,
     cycleNumber: row.cycle_number,
     positionId: row.position_id,
     cellId: row.cell_id,
@@ -130,10 +133,11 @@ function parseRecordColumns(body: Record<string, unknown>, partial: boolean): Re
 // Consultas
 // ---------------------------------------------------------------------------
 
-export async function listRecords(): Promise<RotationRecord[]> {
+export async function listRecords(site: UnidadeId): Promise<RotationRecord[]> {
   const db = await getDb();
   const [rows] = await db.query<RecordRow[]>(
-    'SELECT * FROM rotation_records ORDER BY installed_at DESC, created_at DESC'
+    'SELECT * FROM rotation_records WHERE site = ? ORDER BY installed_at DESC, created_at DESC',
+    [site]
   );
   return rows.map(toRecord);
 }
@@ -148,23 +152,24 @@ function isDuplicateKey(err: unknown): boolean {
   return typeof err === 'object' && err !== null && (err as { code?: string }).code === 'ER_DUP_ENTRY';
 }
 
-export async function createRecord(body: Record<string, unknown>): Promise<RotationRecord> {
+export async function createRecord(site: UnidadeId, body: Record<string, unknown>): Promise<RotationRecord> {
   const columns = parseRecordColumns(body, false);
   const db = await getDb();
   const now = new Date();
   const year = now.getFullYear();
 
-  // Mesmo formato dos registros existentes (REG-AAAA-NNNN); em caso de colisão, tenta outro número.
+  // Mesmo formato dos registros existentes (REG-AAAA-NNNN em Breves, MUA-AAAA-NNNN em Muaná);
+  // em caso de colisão, tenta outro número.
   for (let attempt = 0; attempt < 5; attempt++) {
     const suffix =
       attempt === 0
         ? Date.now().toString().slice(-4)
         : Math.floor(Math.random() * 10_000).toString().padStart(4, '0');
-    const id = `REG-${year}-${suffix}`;
+    const id = `${UNIDADES[site].prefixoRegistro}-${year}-${suffix}`;
 
     try {
       await db.query('INSERT INTO rotation_records SET ?', [
-        { ...columns, id, created_at: now, updated_at: now },
+        { ...columns, id, site, created_at: now, updated_at: now },
       ]);
       const created = await getRecord(id);
       if (!created) throw new Error(`Registro ${id} não encontrado após inserção.`);
@@ -194,21 +199,25 @@ export async function deleteRecord(id: string): Promise<boolean> {
 // Ciclo atual (tabela app_settings)
 // ---------------------------------------------------------------------------
 
-export async function getCurrentCycle(): Promise<number> {
+/** Breves mantém a chave original 'current_cycle'; as demais unidades usam 'current_cycle:<unidade>'. */
+const chaveCiclo = (site: UnidadeId) => (site === 'breves' ? 'current_cycle' : `current_cycle:${site}`);
+
+export async function getCurrentCycle(site: UnidadeId): Promise<number> {
   const db = await getDb();
   const [rows] = await db.query<RowDataPacket[]>(
-    "SELECT setting_value FROM app_settings WHERE setting_key = 'current_cycle' LIMIT 1"
+    'SELECT setting_value FROM app_settings WHERE setting_key = ? LIMIT 1',
+    [chaveCiclo(site)]
   );
   const value = Number.parseInt(String(rows[0]?.setting_value ?? '1'), 10);
   return Number.isInteger(value) && value > 0 ? value : 1;
 }
 
-export async function setCurrentCycle(cycle: unknown): Promise<number> {
+export async function setCurrentCycle(site: UnidadeId, cycle: unknown): Promise<number> {
   const value = intInRange(cycle, 'cycle', 1, 10_000);
   const db = await getDb();
   await db.query(
-    "INSERT INTO app_settings (setting_key, setting_value) VALUES ('current_cycle', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)",
-    [String(value)]
+    'INSERT INTO app_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',
+    [chaveCiclo(site), String(value)]
   );
   return value;
 }

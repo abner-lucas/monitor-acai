@@ -1,13 +1,21 @@
 import { IRotationService, CreateRecordInput, UpdateRecordInput } from './types';
 import { RotationRecord } from '../types';
+import { UnidadeId } from '../unidades';
 import { ApiError, apiRequest } from './apiClient';
 
 /**
  * Rotation Service Implementation: rotas /api do app, gravando no MySQL da Hostinger.
+ * Cada instância trabalha com uma unidade piloto (Breves ou Muaná).
  */
 export class ApiRotationService implements IRotationService {
+  constructor(private readonly unidade: UnidadeId) {}
+
+  private get consulta() {
+    return `?unidade=${this.unidade}`;
+  }
+
   async getRecords(): Promise<RotationRecord[]> {
-    const { records } = await apiRequest<{ records: RotationRecord[] }>('/api/records');
+    const { records } = await apiRequest<{ records: RotationRecord[] }>(`/api/records${this.consulta}`);
     return records;
   }
 
@@ -22,7 +30,7 @@ export class ApiRotationService implements IRotationService {
   }
 
   async createRecord(input: CreateRecordInput): Promise<RotationRecord> {
-    const { record } = await apiRequest<{ record: RotationRecord }>('/api/records', {
+    const { record } = await apiRequest<{ record: RotationRecord }>(`/api/records${this.consulta}`, {
       method: 'POST',
       body: JSON.stringify(input),
     });
@@ -43,12 +51,12 @@ export class ApiRotationService implements IRotationService {
   }
 
   async getCurrentCycle(): Promise<number> {
-    const { cycle } = await apiRequest<{ cycle: number }>('/api/settings/cycle');
+    const { cycle } = await apiRequest<{ cycle: number }>(`/api/settings/cycle${this.consulta}`);
     return cycle;
   }
 
   async setCycle(cycle: number): Promise<number> {
-    const { cycle: saved } = await apiRequest<{ cycle: number }>('/api/settings/cycle', {
+    const { cycle: saved } = await apiRequest<{ cycle: number }>(`/api/settings/cycle${this.consulta}`, {
       method: 'PUT',
       body: JSON.stringify({ cycle }),
     });
@@ -56,4 +64,13 @@ export class ApiRotationService implements IRotationService {
   }
 }
 
-export const apiRotationService = new ApiRotationService();
+const servicos = new Map<UnidadeId, ApiRotationService>();
+
+export function rotationServiceDa(unidade: UnidadeId): IRotationService {
+  let servico = servicos.get(unidade);
+  if (!servico) {
+    servico = new ApiRotationService(unidade);
+    servicos.set(unidade, servico);
+  }
+  return servico;
+}

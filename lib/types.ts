@@ -1,4 +1,5 @@
-export type PositionStatus = 'active' | 'completed' | 'available';
+/** scheduled: posição já sorteada para a próxima troca, ainda sem sensor. */
+export type PositionStatus = 'active' | 'completed' | 'scheduled' | 'available';
 
 export interface PositionInfo {
   id: number; // 1 to 18
@@ -15,6 +16,7 @@ export interface PositionInfo {
 
 export interface RotationRecord {
   id: string; // e.g. "REG-001"
+  site?: 'breves' | 'muana';
   cycleNumber: number;
   positionId: number;
   cellId: number;

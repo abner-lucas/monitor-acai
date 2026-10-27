@@ -9,6 +9,8 @@ interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   record: RotationRecord | null;
+  /** O rodízio tem relatório de campo, que é apagado junto. */
+  temRelatorio?: boolean;
   onConfirmDelete: (recordId: string, revertAvailability: boolean) => Promise<void>;
 }
 
@@ -16,6 +18,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   isOpen,
   onClose,
   record,
+  temRelatorio = false,
   onConfirmDelete,
 }) => {
   const [revertAvailability, setRevertAvailability] = useState(true);
@@ -64,6 +67,12 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               Célula {record.cellId}, Planta {record.plantIndex} (Posição #{record.positionId < 10 ? `0${record.positionId}` : record.positionId})
             </strong>?
           </p>
+
+          {temRelatorio && (
+            <p className="p-3 rounded-xl bg-amber-50 text-xs sm:text-sm text-amber-900">
+              Este rodízio tem <strong>relatório de campo</strong>, que também será excluído.
+            </p>
+          )}
 
           <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
             <label className="flex items-start gap-2.5 cursor-pointer">

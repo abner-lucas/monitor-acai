@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { DatabaseNotConfiguredError } from './db';
 import { getSessionUser } from './auth';
 import type { AuthUser } from '../types';
+import { isUnidade, type UnidadeId } from '../unidades';
 
 /** Erro de dados enviados pelo cliente; vira resposta 400 com a própria mensagem. */
 export class ValidationError extends Error {}
@@ -16,6 +17,13 @@ export function handleRouteError(err: unknown): NextResponse {
 
   console.error('[api]', err);
   return jsonError(500, 'Erro interno no servidor. Tente novamente em instantes.');
+}
+
+/** Unidade piloto pedida na URL (?unidade=breves|muana). */
+export function unidadeDaRequisicao(request: NextRequest): UnidadeId {
+  const unidade = request.nextUrl.searchParams.get('unidade');
+  if (!isUnidade(unidade)) throw new ValidationError('Informe a unidade: breves ou muana.');
+  return unidade;
 }
 
 export async function readJsonBody(request: NextRequest): Promise<Record<string, unknown>> {

@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Search, 
-  Filter, 
-  Calendar, 
-  Edit3, 
-  Trash2, 
-  PlusCircle, 
-  FileSpreadsheet, 
-  FileText, 
-  Radio, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Search,
+  Filter,
+  Calendar,
+  Edit3,
+  Trash2,
+  PlusCircle,
+  FileSpreadsheet,
+  FileText,
+  Radio,
+  CheckCircle2,
+  Clock,
   ChevronDown,
   Info,
   RefreshCcw,
@@ -20,11 +20,17 @@ import {
   ArrowUpDown
 } from 'lucide-react';
 import { RotationRecord } from '@/lib/types';
+import Link from 'next/link';
 import { formatDateBR, exportRecordsToCSV, exportRecordsToExcel } from '@/lib/storage';
+import { situacaoRelatorio, type Relatorio } from '@/lib/relatorio';
+import type { Unidade } from '@/lib/unidades';
 
 interface HistoryCrudProps {
   records: RotationRecord[];
   currentCycle: number;
+  unidade: Unidade;
+  relatorios: Map<string, Relatorio>;
+  hrefRelatorio: (recordId: string, editar?: boolean) => string;
   onOpenCreate: () => void;
   onEditRecord: (record: RotationRecord) => void;
   onDeleteRecord: (record: RotationRecord) => void;
@@ -34,6 +40,9 @@ interface HistoryCrudProps {
 export const HistoryCrud: React.FC<HistoryCrudProps> = ({
   records,
   currentCycle,
+  unidade,
+  relatorios,
+  hrefRelatorio,
   onOpenCreate,
   onEditRecord,
   onDeleteRecord,
@@ -132,20 +141,20 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
   };
 
   return (
-    <div id="historico-crud-section" className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+    <section id="historico-crud-section" aria-labelledby="titulo-historico" className="scroll-mt-24 bg-white rounded-[28px] ring-1 ring-folha-100 overflow-hidden">
       {/* Header bar */}
-      <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="px-5 pt-6 pb-4 sm:px-7 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-              Histórico de Rodízio de Sensores
+          <div className="flex flex-wrap items-baseline gap-3">
+            <h2 id="titulo-historico" className="font-display text-2xl sm:text-3xl font-semibold tracking-tight text-grafite">
+              Histórico do rodízio
             </h2>
-            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-slate-200 text-slate-700">
+            <span className="text-sm font-semibold px-2.5 py-0.5 rounded-full bg-folha-50 text-folha-800 ring-1 ring-folha-100 tabular-nums">
               {filteredRecords.length} {filteredRecords.length === 1 ? 'registro' : 'registros'}
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Registro de auditoria com operações completas de criação, leitura, alteração e exclusão de pontos amostrais
+          <p className="text-sm text-slate-600 mt-1">
+            Cada instalação e retirada de sensor, em ordem de campo. Filtre, edite ou exporte.
           </p>
         </div>
 
@@ -154,26 +163,26 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
           <button
             id="btn-adicionar-registro-tabela"
             onClick={onOpenCreate}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl text-white bg-emerald-700 hover:bg-emerald-800 shadow-xs transition-colors"
+            className="inline-flex min-h-10 items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-full text-white bg-folha-700 hover:bg-folha-800 transition-colors active:scale-[0.97] cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Adicionar Registro Manual</span>
+            <span>Adicionar registro</span>
           </button>
 
           <button
             id="btn-export-excel-table"
-            onClick={() => exportRecordsToExcel(filteredRecords, currentCycle)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-xl text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+            onClick={() => exportRecordsToExcel(filteredRecords, currentCycle, unidade, Array.from(relatorios.values()))}
+            className="inline-flex min-h-10 items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-full text-folha-800 bg-folha-50 hover:bg-folha-100 ring-1 ring-folha-100 transition-colors cursor-pointer"
             title="Exportar registros filtrados para Excel"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+            <FileSpreadsheet className="w-4 h-4" />
             <span className="hidden md:inline">Excel</span>
           </button>
 
           <button
             id="btn-export-csv-table"
-            onClick={() => exportRecordsToCSV(filteredRecords, currentCycle)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-xl text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 transition-colors"
+            onClick={() => exportRecordsToCSV(filteredRecords, currentCycle, unidade, Array.from(relatorios.values()))}
+            className="inline-flex min-h-10 items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-full text-slate-700 bg-white hover:bg-papel ring-1 ring-papel-linha transition-colors cursor-pointer"
             title="Exportar registros filtrados para CSV"
           >
             <FileText className="w-4 h-4 text-slate-600" />
@@ -183,7 +192,7 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 border-b border-slate-200 bg-white space-y-3">
+      <div className="px-5 sm:px-7 pb-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
           {/* Search Box */}
           <div className="lg:col-span-2 relative">
@@ -193,7 +202,8 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
               placeholder="Buscar por célula, planta, técnico, nota..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-hidden transition-all"
+              aria-label="Buscar registros"
+              className="w-full min-h-10 pl-9 pr-3 py-2 text-sm bg-papel/60 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-folha-600 focus:border-transparent outline-hidden transition-colors"
             />
           </div>
 
@@ -202,9 +212,10 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
             <select
               value={filterCell}
               onChange={(e) => setFilterCell(e.target.value)}
-              className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden"
+              aria-label="Filtrar por célula"
+              className="w-full min-h-10 px-3 py-2 text-sm bg-papel/60 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-folha-600 focus:border-transparent outline-hidden transition-colors"
             >
-              <option value="all">Todas as Células (1 a 6)</option>
+              <option value="all">Todas as células</option>
               <option value="1">Célula 1</option>
               <option value="2">Célula 2</option>
               <option value="3">Célula 3</option>
@@ -219,12 +230,13 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden"
+              aria-label="Filtrar por status"
+              className="w-full min-h-10 px-3 py-2 text-sm bg-papel/60 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-folha-600 focus:border-transparent outline-hidden transition-colors"
             >
-              <option value="all">Todos os Status</option>
-              <option value="active">🟢 Apenas Ativos</option>
-              <option value="completed">🔵 Concluídos</option>
-              <option value="scheduled">⚪ Agendados</option>
+              <option value="all">Todos os status</option>
+              <option value="active">Apenas ativos</option>
+              <option value="completed">Concluídos</option>
+              <option value="scheduled">Agendados</option>
             </select>
           </div>
 
@@ -233,9 +245,10 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
             <select
               value={filterCycle}
               onChange={(e) => setFilterCycle(e.target.value)}
-              className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden"
+              aria-label="Filtrar por ciclo"
+              className="w-full min-h-10 px-3 py-2 text-sm bg-papel/60 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-folha-600 focus:border-transparent outline-hidden transition-colors"
             >
-              <option value="all">Todos os Ciclos</option>
+              <option value="all">Todos os ciclos</option>
               {availableCycles.map((c) => (
                 <option key={c} value={c}>
                   Ciclo {c}
@@ -248,39 +261,41 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
           <div>
             <button
               onClick={clearFilters}
-              className="w-full px-3 py-2 text-xs sm:text-sm font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+              className="group w-full min-h-10 px-3 py-2 text-sm font-medium text-slate-700 hover:text-grafite hover:bg-papel rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <RefreshCcw className="w-3.5 h-3.5" />
-              Limpar Filtros
+              <RefreshCcw className="w-3.5 h-3.5 transition-transform duration-500 group-hover:-rotate-180" />
+              Limpar filtros
             </button>
           </div>
         </div>
 
         {/* Date Interval Bar */}
-        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-slate-600">
-          <span className="font-semibold flex items-center gap-1 text-slate-700">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            Intervalo de Datas:
+        <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-slate-600">
+          <span className="font-medium flex items-center gap-1.5 text-slate-700">
+            <Calendar className="w-4 h-4 text-folha-600" />
+            Instalados entre
           </span>
           <div className="flex items-center gap-2">
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-hidden font-mono"
+              aria-label="Data inicial"
+              className="min-h-9 px-2.5 py-1 text-sm tabular-nums bg-papel/60 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-folha-600 focus:border-transparent outline-hidden transition-colors"
             />
-            <span>até</span>
+            <span>e</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-500 outline-hidden font-mono"
+              aria-label="Data final"
+              className="min-h-9 px-2.5 py-1 text-sm tabular-nums bg-papel/60 border border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-folha-600 focus:border-transparent outline-hidden transition-colors"
             />
           </div>
           {(startDate || endDate) && (
             <button
               onClick={() => { setStartDate(''); setEndDate(''); }}
-              className="text-[11px] text-emerald-700 hover:underline"
+              className="text-sm text-folha-700 underline-offset-2 hover:underline cursor-pointer"
             >
               Remover filtro de data
             </button>
@@ -289,46 +304,46 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
-          <thead className="bg-slate-50/80 text-slate-600 uppercase font-semibold border-b border-slate-200">
+      <div className="overflow-x-auto border-t border-folha-100">
+        <table className="w-full text-left text-sm border-collapse">
+          <thead className="bg-folha-50/70 text-folha-800 text-xs font-semibold">
             <tr>
-              <th 
+              <th
                 onClick={() => toggleSort('id')}
-                className="py-3 px-4 cursor-pointer hover:bg-slate-100 transition-colors"
+                className="py-3 px-3 cursor-pointer hover:bg-folha-100/60 transition-colors"
               >
                 <div className="flex items-center gap-1">
-                  <span>#ID</span>
-                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  <span>Registro</span>
+                  <ArrowUpDown className="w-3 h-3 text-folha-600" />
                 </div>
               </th>
-              <th className="py-3 px-4">Ciclo</th>
-              <th 
+              <th className="py-3 px-3">Ciclo</th>
+              <th
                 onClick={() => toggleSort('cellId')}
-                className="py-3 px-4 cursor-pointer hover:bg-slate-100 transition-colors"
+                className="py-3 px-3 cursor-pointer hover:bg-folha-100/60 transition-colors"
               >
                 <div className="flex items-center gap-1">
                   <span>Localização</span>
-                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  <ArrowUpDown className="w-3 h-3 text-folha-600" />
                 </div>
               </th>
-              <th 
+              <th
                 onClick={() => toggleSort('installedAt')}
-                className="py-3 px-4 cursor-pointer hover:bg-slate-100 transition-colors"
+                className="py-3 px-3 cursor-pointer hover:bg-folha-100/60 transition-colors"
               >
                 <div className="flex items-center gap-1">
                   <span>Instalação</span>
-                  <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  <ArrowUpDown className="w-3 h-3 text-folha-600" />
                 </div>
               </th>
-              <th className="py-3 px-4">Próx. Troca / Retirada</th>
-              <th className="py-3 px-4">Responsável</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4 max-w-xs">Observações Técnicas</th>
-              <th className="py-3 px-4 text-right">Ações</th>
+              <th className="py-3 px-3">Troca / retirada</th>
+              <th className="py-3 px-3">Responsável</th>
+              <th className="py-3 px-3">Status</th>
+              <th className="py-3 px-3">Observações</th>
+              <th className="py-3 px-3 text-right">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-folha-100/70">
             {filteredRecords.length === 0 ? (
               <tr>
                 <td colSpan={9} className="py-10 text-center text-slate-500">
@@ -342,35 +357,35 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                 return (
                   <tr
                     key={record.id}
-                    className={`hover:bg-slate-50/80 transition-colors ${
-                      isCurrentActive ? 'bg-emerald-50/30' : ''
+                    className={`hover:bg-papel/60 transition-colors ${
+                      isCurrentActive ? 'bg-broto-100/40' : ''
                     }`}
                   >
                     {/* ID */}
-                    <td className="py-3 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">
+                    <td className="py-3 px-3 font-semibold text-grafite whitespace-nowrap tabular-nums">
                       {record.id}
                     </td>
 
                     {/* Ciclo */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
+                      <span className="text-slate-700 tabular-nums">
                         Ciclo {record.cycleNumber}
                       </span>
                     </td>
 
                     {/* Location */}
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2.5">
+                    <td className="py-3.5 px-3">
+                      <div className="flex items-center gap-2.5 whitespace-nowrap">
                         <button
                           onClick={() => onSelectPosition(record.positionId)}
-                          className="w-8 h-8 rounded-lg bg-white border border-slate-300 hover:border-emerald-600 flex items-center justify-center font-mono font-bold text-xs text-slate-900 shadow-2xs transition-colors cursor-pointer"
+                          className="w-9 h-9 rounded-xl bg-white ring-1 ring-papel-linha hover:ring-2 hover:ring-folha-600 flex items-center justify-center font-display font-semibold text-sm text-grafite tabular-nums transition-shadow cursor-pointer"
                           title="Inspecionar no mapa"
                           aria-label={`Inspecionar posição ${record.positionId} no mapa`}
                         >
                           {record.positionId < 10 ? `0${record.positionId}` : record.positionId}
                         </button>
                         <div>
-                          <strong className="block text-slate-900 font-bold text-xs">
+                          <strong className="block text-grafite font-semibold text-sm">
                             Célula {record.cellId}
                           </strong>
                           <span className="text-xs text-slate-600 font-medium">
@@ -381,22 +396,22 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                     </td>
 
                     {/* Installation Date */}
-                    <td className="py-3.5 px-4 whitespace-nowrap font-mono text-xs font-semibold text-slate-900">
+                    <td className="py-3.5 px-3 whitespace-nowrap text-sm text-grafite tabular-nums">
                       {formatDateBR(record.installedAt)}
                     </td>
 
                     {/* Scheduled Change / Retirada */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       {record.removedAt ? (
                         <div>
-                          <span className="font-mono text-xs text-slate-800 font-semibold block">
+                          <span className="text-sm text-grafite block tabular-nums">
                             {formatDateBR(record.removedAt)}
                           </span>
-                          <span className="text-xs text-blue-700 font-bold block mt-0.5">Recolhido</span>
+                          <span className="text-xs text-agua-700 font-semibold block mt-0.5">Recolhido</span>
                         </div>
                       ) : (
                         <div>
-                          <span className="font-mono text-xs text-emerald-800 font-bold block">
+                          <span className="text-sm text-folha-700 font-semibold block tabular-nums">
                             {formatDateBR(record.scheduledNextChange)}
                           </span>
                           <span className="text-xs text-slate-600 font-medium block mt-0.5">14 dias de perm.</span>
@@ -405,48 +420,65 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                     </td>
 
                     {/* Responsible */}
-                    <td className="py-3.5 px-4 text-xs font-medium text-slate-800 whitespace-nowrap">
-                      <span className="truncate max-w-[150px] block" title={record.responsible}>
+                    <td className="py-3.5 px-3 text-sm text-slate-800 whitespace-nowrap">
+                      <span className="truncate max-w-[130px] block" title={record.responsible}>
                         {record.responsible}
                       </span>
                     </td>
 
                     {/* Status Badge */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       {record.status === 'active' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          <Radio className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-folha-700 text-white">
+                          <Radio className="w-3.5 h-3.5 text-broto-400" />
                           Ativo em Campo
                         </span>
                       )}
                       {record.status === 'completed' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-agua-100 text-agua-700">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
                           Concluído
                         </span>
                       )}
                       {record.status === 'scheduled' && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-                          <Clock className="w-3.5 h-3.5 text-slate-500" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-acai-800 border border-dashed border-acai-300 bg-acai-100/60">
+                          <Clock className="w-3.5 h-3.5" />
                           Agendado
                         </span>
                       )}
                     </td>
 
                     {/* Observations */}
-                    <td className="py-3.5 px-4 max-w-xs text-xs text-slate-700">
+                    <td className="py-3.5 px-3 max-w-[220px] text-sm text-slate-700">
                       <p className="truncate" title={record.notes}>
                         {record.notes || <span className="text-slate-400 italic">Sem observações</span>}
                       </p>
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                    <td className="py-3.5 px-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
+                        {(() => {
+                          const situacao = situacaoRelatorio(relatorios.get(record.id));
+                          const pendente = situacao === 'pendente';
+                          return (
+                            <Link
+                              href={hrefRelatorio(record.id, pendente)}
+                              className={`relative w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
+                                pendente ? 'text-acai-700 hover:bg-acai-100' : 'text-slate-600 hover:text-folha-700 hover:bg-folha-50'
+                              }`}
+                              title={pendente ? 'Preencher relatório de campo' : 'Abrir relatório de campo'}
+                              aria-label={`${pendente ? 'Preencher' : 'Abrir'} relatório de campo de ${record.id}`}
+                            >
+                              <FileText className="w-4 h-4" />
+                              {pendente && <span aria-hidden="true" className="absolute right-2 top-2 h-2 w-2 rounded-full bg-lapis" />}
+                            </Link>
+                          );
+                        })()}
                         <button
                           id={`btn-edit-${record.id}`}
                           onClick={() => onEditRecord(record)}
-                          className="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                          className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-folha-700 hover:bg-folha-50 rounded-full transition-colors cursor-pointer"
                           title="Editar registro"
                           aria-label={`Editar registro ${record.id}`}
                         >
@@ -455,7 +487,7 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                         <button
                           id={`btn-delete-${record.id}`}
                           onClick={() => onDeleteRecord(record)}
-                          className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-rose-700 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
                           title="Excluir registro"
                           aria-label={`Excluir registro ${record.id}`}
                         >
@@ -472,11 +504,11 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
       </div>
 
       {/* Footer info bar */}
-      <div className="p-3 bg-slate-50 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-end">
+      <div className="px-5 sm:px-7 py-3.5 border-t border-folha-100 text-sm text-slate-600 flex items-center justify-end tabular-nums">
         <span>
           Total: <strong>{records.length}</strong> {records.length === 1 ? 'rodízio cadastrado' : 'rodízios cadastrados'}
         </span>
       </div>
-    </div>
+    </section>
   );
 };

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { handleRouteError, readJsonBody, requireUser } from '@/lib/server/http';
+import { handleRouteError, readJsonBody, requireUser, unidadeDaRequisicao } from '@/lib/server/http';
 import { getCurrentCycle, setCurrentCycle } from '@/lib/server/records';
 
 export async function GET(request: NextRequest) {
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const guard = await requireUser(request);
     if (guard.response) return guard.response;
 
-    return NextResponse.json({ cycle: await getCurrentCycle() });
+    return NextResponse.json({ cycle: await getCurrentCycle(unidadeDaRequisicao(request)) });
   } catch (err) {
     return handleRouteError(err);
   }
@@ -18,8 +18,9 @@ export async function PUT(request: NextRequest) {
     const guard = await requireUser(request);
     if (guard.response) return guard.response;
 
+    const unidade = unidadeDaRequisicao(request);
     const body = await readJsonBody(request);
-    return NextResponse.json({ cycle: await setCurrentCycle(body.cycle) });
+    return NextResponse.json({ cycle: await setCurrentCycle(unidade, body.cycle) });
   } catch (err) {
     return handleRouteError(err);
   }
