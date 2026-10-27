@@ -2,14 +2,29 @@
 
 Sistema de gestão, acompanhamento e sorteio de rodízio aleatório sem reposição de sensores de umidade do solo (FDR) no Sistema Agroflorestal (SAF) irrigado de Açaí (*Euterpe oleracea*) do **IFPA Campus Breves (Marajó/PA)**.
 
+Em produção: **https://monitoracai.profabnerlucas.com** (Hostinger).
+
 ---
 
 ## 🚀 Tecnologias
 
 - **Framework:** [Next.js 15](https://nextjs.org/) (App Router) + React 19 + TypeScript
 - **Estilização:** Tailwind CSS + Lucide React
-- **Banco de Dados:** [Supabase](https://supabase.com/) (PostgreSQL em Nuvem)
+- **Banco de Dados:** MySQL da própria hospedagem Hostinger (acessado só pelo servidor, via rotas `/api`)
+- **Autenticação:** senhas com hash bcrypt e sessão em cookie httpOnly assinado
 - **Exportação:** Planilhas Excel nativas (.xlsx via SheetJS) e CSV (UTF-8 com BOM)
+
+---
+
+## 🗄️ Banco de dados
+
+As tabelas são criadas automaticamente na primeira requisição (`lib/server/db.ts`):
+
+| Tabela | Conteúdo |
+| --- | --- |
+| `rotation_records` | Registros de instalação/retirada dos sensores em cada posição e ciclo |
+| `app_settings` | Configurações do app (ciclo atual em `current_cycle`) |
+| `authorized_users` | Pesquisadores autorizados e coordenador (senha guardada só como hash) |
 
 ---
 
@@ -20,11 +35,9 @@ Sistema de gestão, acompanhamento e sorteio de rodízio aleatório sem reposiç
    npm install
    ```
 
-2. Configure as variáveis em `.env.local`:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL="https://seu-projeto.supabase.co"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="sua-chave-anon"
-   ```
+2. Copie `.env.example` para `.env.local` e preencha:
+   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`: dados do banco MySQL. Para usar o banco da Hostinger fora do servidor, use o host remoto (`srvNNNN.hstgr.io`) e libere seu IP em *hPanel → Bancos de dados → MySQL remoto*.
+   - `SESSION_SECRET`: texto aleatório com pelo menos 32 caracteres.
 
 3. Inicie o servidor de desenvolvimento:
    ```bash
@@ -34,38 +47,11 @@ Sistema de gestão, acompanhamento e sorteio de rodízio aleatório sem reposiç
 
 ---
 
-## ☁️ Como Subir na Vercel
+## ☁️ Publicação na Hostinger
 
-### Método 1: Via GitHub (Recomendado)
+O site é um app Node.js na Hostinger, conectado a este repositório do GitHub: **cada push na branch `master` gera um novo build e publica automaticamente.**
 
-1. **Faça o commit e envie para o seu GitHub:**
-   ```bash
-   git add .
-   git commit -m "feat: MonitorAcai pronto para producao com Supabase"
-   git branch -M main
-   git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-   git push -u origin main
-   ```
+Configuração do app (hPanel → Sites → `monitoracai.profabnerlucas.com` → Node.js):
 
-2. **Importe na Vercel:**
-   - Acesse [vercel.com](https://vercel.com) e faça login.
-   - Clique em **"Add New..."** > **"Project"**.
-   - Selecione o repositório GitHub do projeto.
-
-3. **Configure as Variáveis de Ambiente na Vercel:**
-   Na tela de importação (ou em *Settings > Environment Variables*), adicione:
-   - `NEXT_PUBLIC_SUPABASE_URL`: sua URL do projeto Supabase.
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: sua chave pública `anon`.
-
-4. **Clique em "Deploy":**
-   A Vercel detectará automaticamente o framework Next.js e fará a compilação e publicação global da sua aplicação.
-
----
-
-### Método 2: Via Vercel CLI
-
-Se tiver a [Vercel CLI](https://vercel.com/docs/cli) instalada:
-```bash
-npx vercel
-```
-Siga as instruções no terminal e insira as variáveis de ambiente quando solicitado.
+- **Framework:** Next.js · **Node:** 22 · **Build:** `npm run build` · **Saída:** `.next`
+- **Variáveis de ambiente:** `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `SESSION_SECRET`. No servidor o banco é acessado por `127.0.0.1`, nunca pelo host remoto.

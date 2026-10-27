@@ -1,23 +1,13 @@
 import { IRotationService } from './types';
-import { mockRotationService } from './mockRotationService';
-import { supabaseRotationService } from './supabaseRotationService';
+import { apiRotationService } from './apiRotationService';
 
 /**
  * ACTIVE ROTATION SERVICE
- * 
- * Automatically activates Supabase when NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are present.
- * Otherwise, smoothly defaults to mockRotationService (localStorage & local simulation).
+ *
+ * O navegador fala apenas com as rotas /api do próprio app; elas validam a sessão
+ * e gravam no banco MySQL da Hostinger.
  */
-const isSupabaseConfigured = Boolean(
-  typeof process !== 'undefined' &&
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
-export const rotationService: IRotationService = isSupabaseConfigured
-  ? supabaseRotationService
-  : mockRotationService;
+export const rotationService: IRotationService = apiRotationService;
 
 export * from './types';
-export { mockRotationService } from './mockRotationService';
-export { supabaseRotationService } from './supabaseRotationService';
+export { apiRotationService } from './apiRotationService';

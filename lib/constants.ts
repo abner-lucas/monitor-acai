@@ -4,6 +4,9 @@ export const TOTAL_POSITIONS = 18;
 export const DAYS_PER_ROTATION = 14;
 export const TOTAL_WEEKS = 36; // 18 positions * 2 weeks
 
+// Coordenador do projeto: não pode ser removido nem desativado.
+export const SUPERUSER_EMAIL = 'abner.lucas@ifpa.edu.br';
+
 export const CELLS_METADATA = [
   { id: 1, name: 'Célula 1', description: 'Triângulo Superior Oeste - Açaizal SAF IFPA', plantPositions: [1, 7, 13], dataloggerId: 'DLG-01' },
   { id: 2, name: 'Célula 2', description: 'Triângulo Superior Centro - Açaizal SAF IFPA', plantPositions: [2, 8, 14], dataloggerId: 'DLG-02' },

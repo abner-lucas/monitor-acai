@@ -187,7 +187,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onAuthSuccess }) => {
           </span>
           <span className="flex items-center gap-1 text-xs font-mono text-slate-500">
             <Database className="w-3 h-3 text-emerald-600" />
-            Supabase PostgreSQL
+            MySQL Hostinger
           </span>
         </div>
       </div>

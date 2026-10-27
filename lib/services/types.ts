@@ -32,7 +32,7 @@ export interface UpdateRecordInput {
 
 /**
  * Service Contract for Rotation Records Management.
- * Implemented by MockRotationService (localStorage) and ready for SupabaseRotationService.
+ * Implemented by ApiRotationService (rotas /api + MySQL da Hostinger).
  */
 export interface IRotationService {
   /** Fetch all rotation records */

@@ -1,6 +1,6 @@
 import http from 'http';
 import https from 'https';
-import { createClient } from '@supabase/supabase-js';
+import mysql from 'mysql2/promise';
 
 // Load environment variables from .env.local
 import fs from 'fs';
@@ -24,8 +24,14 @@ for (const line of envContent.split('\n')) {
   }
 }
 
-const SUPABASE_URL = envVars['NEXT_PUBLIC_SUPABASE_URL'];
-const SUPABASE_ANON_KEY = envVars['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
+const DB_CONFIG = {
+  host: envVars['DB_HOST'] || '127.0.0.1',
+  port: Number(envVars['DB_PORT']) || 3306,
+  database: envVars['DB_NAME'],
+  user: envVars['DB_USER'],
+  password: envVars['DB_PASSWORD'],
+  charset: 'utf8mb4',
+};
 
 function fetchUrl(url) {
   return new Promise((resolve, reject) => {
@@ -41,12 +47,6 @@ function fetchUrl(url) {
       });
     }).on('error', reject);
   });
-}
-
-// SHA-256 helper matching authService
-async function hashPassword(password) {
-  const crypto = await import('crypto');
-  return crypto.createHash('sha256').update(password).digest('hex');
 }
 
 async function runSingleVerificationPass(runIndex) {
@@ -112,55 +112,42 @@ async function runSingleVerificationPass(runIndex) {
     recordTest('Conexão HTTP com localhost:3000', false, err.message);
   }
 
-  // TEST 5: Conectividade e Integridade com Supabase
+  // TEST 5: Conectividade e Integridade com o MySQL da Hostinger
+  let db;
   try {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    db = await mysql.createConnection(DB_CONFIG);
 
-    // 5.1: App Settings (Authorized Users & Super User)
-    const { data: settingsData, error: settingsError } = await supabase
-      .from('app_settings')
-      .select('*')
-      .eq('key', 'authorized_users')
-      .single();
-
+    // 5.1: Usuários autorizados e Super Usuário
+    const [users] = await db.query('SELECT email, full_name, role, is_active, password_hash FROM authorized_users');
     recordTest(
-      'Tabela app_settings acessível e configurada',
-      !settingsError && !!settingsData,
-      settingsError ? settingsError.message : `Chave 'authorized_users' localizada com sucesso`
+      'Tabela authorized_users acessível',
+      Array.isArray(users),
+      `Usuários cadastrados: ${users.length}`
     );
 
-    if (settingsData && settingsData.value) {
-      const users = typeof settingsData.value === 'string' ? JSON.parse(settingsData.value) : settingsData.value;
-      const superUser = users.find(u => u.email === 'abner.lucas@ifpa.edu.br');
-      recordTest(
-        'Super Usuário registrado no banco de dados',
-        !!superUser && superUser.role === 'superuser',
-        superUser ? `Super Usuário: ${superUser.fullName} (${superUser.email}), Role: ${superUser.role}` : 'Não encontrado'
-      );
+    const superUser = users.find(u => u.email === 'abner.lucas@ifpa.edu.br');
+    recordTest(
+      'Super Usuário registrado no banco de dados',
+      !!superUser && superUser.role === 'superuser',
+      superUser ? `Super Usuário: ${superUser.full_name} (${superUser.email}), Role: ${superUser.role}` : 'Não encontrado'
+    );
 
-      // 5.2: Validação de Credencial do Administrador
-      if (superUser) {
-        recordTest(
-          'Credencial do Super Usuário está ativa e protegida',
-          superUser.isActive === true && typeof superUser.password === 'string' && superUser.password.length > 0,
-          `Ativo: ${superUser.isActive}, Senha configurada no banco (comprimento: ${superUser.password.length})`
-        );
-      }
-    }
+    // 5.2: Senhas guardadas apenas como hash bcrypt
+    recordTest(
+      'Senhas armazenadas apenas como hash bcrypt',
+      users.length > 0 && users.every(u => /^\$2[aby]\$\d{2}\$/.test(u.password_hash)),
+      superUser ? `Super Usuário ativo: ${Boolean(superUser.is_active)}` : ''
+    );
 
     // 5.3: Tabela rotation_records
-    const { data: recordsData, error: recordsError } = await supabase
-      .from('rotation_records')
-      .select('*')
-      .order('installed_at', { ascending: false });
-
+    const [recordsData] = await db.query('SELECT * FROM rotation_records ORDER BY installed_at DESC');
     recordTest(
       'Tabela rotation_records acessível e com integridade de dados',
-      !recordsError && Array.isArray(recordsData),
-      recordsError ? recordsError.message : `Total de registros de rodízio: ${recordsData?.length || 0}`
+      Array.isArray(recordsData),
+      `Total de registros de rodízio: ${recordsData.length}`
     );
 
-    if (recordsData && recordsData.length > 0) {
+    if (recordsData.length > 0) {
       const sample = recordsData[0];
       const hasRequiredFields = sample.cell_id && sample.plant_index && sample.cycle_number;
       recordTest(
@@ -171,7 +158,9 @@ async function runSingleVerificationPass(runIndex) {
     }
 
   } catch (err) {
-    recordTest('Integração com Supabase', false, err.message);
+    recordTest('Integração com o banco MySQL', false, err.message);
+  } finally {
+    await db?.end();
   }
 
   // TEST 6: Consistência da Metodologia Matemática do SAF
