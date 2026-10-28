@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ArrowRight, Calendar, Check, Dices, FileText, Loader2, RotateCw, X } from 'lucide-react';
+import { ArrowRight, Calendar, Check, Dices, FileText, Loader2, RotateCw } from 'lucide-react';
+import { Janela } from '@/components/vivo/Janela';
 import confetti from 'canvas-confetti';
 import { PositionInfo, RotationRecord } from '@/lib/types';
 import { DAYS_PER_ROTATION, getPositionById } from '@/lib/constants';
@@ -244,12 +245,6 @@ function Conteudo({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destino?.id, sortearProxima, modo]);
 
-  useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && !enviando && onClose();
-    window.addEventListener('keydown', esc);
-    return () => window.removeEventListener('keydown', esc);
-  }, [enviando, onClose]);
-
   const dataInvalida = !!ativo && data < ativo.installedAt;
   const pronto =
     !enviando &&
@@ -284,36 +279,27 @@ function Conteudo({
     'w-full min-h-11 rounded-2xl border border-transparent bg-papel/70 px-3.5 py-2.5 text-sm text-grafite outline-hidden focus:bg-white focus:ring-2 focus:ring-folha-600';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-acai-950/60 p-4 backdrop-blur-xs sm:items-center">
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="titulo-campo"
-        initial={reduzir ? false : { opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="relative my-6 w-full max-w-xl overflow-hidden rounded-[28px] bg-white shadow-2xl"
-      >
-        <div className="flex items-start justify-between gap-3 px-6 pt-6">
-          <div>
-            <h2 id="titulo-campo" className="font-display text-2xl font-semibold tracking-tight text-grafite">
-              {modo === 'agendar' ? 'Sortear próxima posição' : 'Registrar rodízio'}
-            </h2>
-            <p className="mt-0.5 text-sm text-slate-600">
-              {nomeUnidade} · Ciclo {currentCycle}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={enviando}
-            aria-label="Fechar"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-papel hover:text-grafite cursor-pointer"
-          >
-            <X className="h-5 w-5" />
+    <Janela
+      titulo={modo === 'agendar' ? 'Sortear próxima posição' : 'Registrar rodízio'}
+      subtitulo={`${nomeUnidade} · Ciclo ${currentCycle}`}
+      onFechar={onClose}
+      bloquearFechar={enviando}
+      rodape={<>
+          <button onClick={onClose} disabled={enviando} className="min-h-10 rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-papel cursor-pointer">
+            Cancelar
           </button>
-        </div>
-
-        <div className="space-y-5 px-6 py-5">
+          <button
+            id="btn-confirmar-rodizio"
+            onClick={confirmar}
+            disabled={!pronto}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-acai-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-acai-800 disabled:opacity-50 cursor-pointer"
+          >
+            {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : modo === 'agendar' ? <Check className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+            {modo === 'agendar' ? `Agendar #${sorteioProxima.escolhido ? doisDigitos(sorteioProxima.escolhido.id) : '--'}` : 'Registrar e abrir relatório'}
+          </button>
+</>}
+    >
+      <div className="space-y-5">
           {modo === 'registrar' && (
             <>
               <section aria-label="Troca de hoje">
@@ -427,23 +413,7 @@ function Conteudo({
               {erro}
             </p>
           )}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-folha-100 px-6 py-4">
-          <button onClick={onClose} disabled={enviando} className="min-h-10 rounded-full px-4 py-2 text-sm font-medium text-slate-700 hover:bg-papel cursor-pointer">
-            Cancelar
-          </button>
-          <button
-            id="btn-confirmar-rodizio"
-            onClick={confirmar}
-            disabled={!pronto}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-acai-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-acai-800 disabled:opacity-50 cursor-pointer"
-          >
-            {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : modo === 'agendar' ? <Check className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
-            {modo === 'agendar' ? `Agendar #${sorteioProxima.escolhido ? doisDigitos(sorteioProxima.escolhido.id) : '--'}` : 'Registrar e abrir relatório'}
-          </button>
-        </div>
-      </motion.div>
-    </div>
+      </div>
+    </Janela>
   );
 }

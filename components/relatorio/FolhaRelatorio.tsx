@@ -334,7 +334,7 @@ export function FolhaRelatorio({
                         </strong>{' '}
                         {f.texto}
                         {posicao !== undefined && (
-                          <span className="block font-mono text-[11px] text-slate-500">
+                          <span className="block break-all font-mono text-[11px] text-slate-500">
                             {nomeFoto(unidade, record.installedAt, posicao, f.tipo)}
                           </span>
                         )}

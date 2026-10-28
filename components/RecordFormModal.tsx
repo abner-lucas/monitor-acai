@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Check, Calendar, UserCheck, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { Calendar, Check, FileText, Loader2, UserCheck } from 'lucide-react';
 import { RotationRecord } from '@/lib/types';
-import { POSITIONS_DATA } from '@/lib/constants';
+import { CELLS_METADATA, POSITIONS_DATA } from '@/lib/constants';
 import { addDaysToDate, getTodayLocalDateStr } from '@/lib/storage';
+import { Janela, estilos } from '@/components/vivo/Janela';
+
+type Status = 'active' | 'completed' | 'scheduled';
 
 interface RecordFormModalProps {
   isOpen: boolean;
@@ -23,98 +26,77 @@ interface RecordFormModalProps {
     removedAt: string | null;
     responsible: string;
     notes: string;
-    status: 'active' | 'completed' | 'scheduled';
+    status: Status;
   }) => Promise<void>;
 }
 
-export const RecordFormModal: React.FC<RecordFormModalProps> = ({
-  isOpen,
-  onClose,
-  recordToEdit,
-  currentCycle,
-  nomeUnidade,
-  onSaveRecord,
-}) => {
+export const RecordFormModal: React.FC<RecordFormModalProps> = ({ isOpen, recordToEdit, currentCycle, ...resto }) => {
   if (!isOpen) return null;
-
   return (
-    <RecordFormModalContent
+    <Conteudo
       key={recordToEdit ? recordToEdit.id : `new-${currentCycle}`}
-      onClose={onClose}
       recordToEdit={recordToEdit}
       currentCycle={currentCycle}
-      nomeUnidade={nomeUnidade}
-      onSaveRecord={onSaveRecord}
+      {...resto}
     />
   );
 };
 
-interface ContentProps {
-  onClose: () => void;
-  recordToEdit: RotationRecord | null;
-  currentCycle: number;
-  nomeUnidade: string;
-  onSaveRecord: (data: any) => Promise<void>;
+const STATUS: { valor: Status; texto: string; ponto: string }[] = [
+  { valor: 'active', texto: 'Ativo em campo', ponto: 'bg-broto-500' },
+  { valor: 'completed', texto: 'Concluído', ponto: 'bg-agua-600' },
+  { valor: 'scheduled', texto: 'Sorteado (agendado)', ponto: 'border-2 border-dashed border-acai-700' },
+];
+
+function Erro({ texto }: { texto?: string }) {
+  return texto ? <p className="mt-1 text-xs text-rose-700">{texto}</p> : null;
 }
 
-const RecordFormModalContent: React.FC<ContentProps> = ({
+function Conteudo({
   onClose,
   recordToEdit,
   currentCycle,
   nomeUnidade,
   onSaveRecord,
-}) => {
+}: Omit<RecordFormModalProps, 'isOpen'>) {
   const isEditing = !!recordToEdit;
   const todayStr = getTodayLocalDateStr();
 
-  const [cycleNumber, setCycleNumber] = useState<number>(() => recordToEdit ? recordToEdit.cycleNumber : currentCycle);
-  const [positionId, setPositionId] = useState<number>(() => recordToEdit ? recordToEdit.positionId : 1);
-  const [installedAt, setInstalledAt] = useState<string>(() => recordToEdit ? recordToEdit.installedAt : todayStr);
-  const [scheduledNextChange, setScheduledNextChange] = useState<string>(() =>
-    recordToEdit ? recordToEdit.scheduledNextChange : addDaysToDate(todayStr, 14)
+  const [cycleNumber, setCycleNumber] = useState<number>(() => recordToEdit?.cycleNumber ?? currentCycle);
+  const [positionId, setPositionId] = useState<number>(() => recordToEdit?.positionId ?? 1);
+  const [installedAt, setInstalledAt] = useState<string>(() => recordToEdit?.installedAt ?? todayStr);
+  const [scheduledNextChange, setScheduledNextChange] = useState<string>(
+    () => recordToEdit?.scheduledNextChange ?? addDaysToDate(todayStr, 14)
   );
-  const [removedAt, setRemovedAt] = useState<string>(() => (recordToEdit && recordToEdit.removedAt) ? recordToEdit.removedAt : '');
-  const [responsible, setResponsible] = useState<string>(() => recordToEdit ? recordToEdit.responsible : 'Ábner Lucas / Técnico IFPA');
-  const [status, setStatus] = useState<'active' | 'completed' | 'scheduled'>(() => recordToEdit ? recordToEdit.status : 'active');
-  const [notes, setNotes] = useState<string>(() => recordToEdit ? (recordToEdit.notes || '') : 'Instalação de rotina em campo.');
+  const [removedAt, setRemovedAt] = useState<string>(() => recordToEdit?.removedAt ?? '');
+  const [responsible, setResponsible] = useState<string>(() => recordToEdit?.responsible ?? 'Ábner Lucas / Técnico IFPA');
+  const [status, setStatus] = useState<Status>(() => recordToEdit?.status ?? 'active');
+  // Sem texto pronto: a observação só existe se alguém escrever.
+  const [notes, setNotes] = useState<string>(() => recordToEdit?.notes ?? '');
 
-  // UX states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInstalledAtChange = (newDate: string) => {
     setInstalledAt(newDate);
-    if (errors.installedAt) {
-      setErrors((prev) => ({ ...prev, installedAt: '' }));
-    }
-    if (!recordToEdit) {
-      setScheduledNextChange(addDaysToDate(newDate, 14));
-    }
+    if (errors.installedAt) setErrors((prev) => ({ ...prev, installedAt: '' }));
+    if (!recordToEdit) setScheduledNextChange(addDaysToDate(newDate, 14));
   };
 
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!installedAt) {
-      newErrors.installedAt = 'A data de instalação é obrigatória.';
+    const novos: Record<string, string> = {};
+    if (!installedAt) novos.installedAt = 'A data de instalação é obrigatória.';
+    if (!scheduledNextChange) novos.scheduledNextChange = 'A previsão de troca é obrigatória.';
+    else if (installedAt && scheduledNextChange < installedAt) {
+      novos.scheduledNextChange = 'A data de troca não pode ser anterior à data de instalação.';
     }
-
-    if (!scheduledNextChange) {
-      newErrors.scheduledNextChange = 'A previsão de troca é obrigatória.';
-    } else if (installedAt && new Date(scheduledNextChange) < new Date(installedAt)) {
-      newErrors.scheduledNextChange = 'A data de troca não pode ser anterior à data de instalação.';
+    if (removedAt && installedAt && removedAt < installedAt) {
+      novos.removedAt = 'A retirada não pode ser anterior à instalação.';
     }
-
-    if (!responsible || responsible.trim().length < 2) {
-      newErrors.responsible = 'Informe o nome do responsável (mínimo 2 letras).';
-    }
-
-    if (cycleNumber < 1) {
-      newErrors.cycleNumber = 'O ciclo deve ser maior ou igual a 1.';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!responsible || responsible.trim().length < 2) novos.responsible = 'Informe o nome do responsável (mínimo 2 letras).';
+    if (cycleNumber < 1) novos.cycleNumber = 'O ciclo deve ser maior ou igual a 1.';
+    setErrors(novos);
+    return Object.keys(novos).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,14 +105,13 @@ const RecordFormModalContent: React.FC<ContentProps> = ({
 
     setIsSubmitting(true);
     try {
-      const selectedPos = POSITIONS_DATA.find((p) => p.id === Number(positionId)) || POSITIONS_DATA[0];
-
+      const pos = POSITIONS_DATA.find((p) => p.id === Number(positionId)) || POSITIONS_DATA[0];
       await onSaveRecord({
         id: recordToEdit?.id,
         cycleNumber: Number(cycleNumber),
-        positionId: selectedPos.id,
-        cellId: selectedPos.cellId,
-        plantIndex: selectedPos.plantIndex,
+        positionId: pos.id,
+        cellId: pos.cellId,
+        plantIndex: pos.plantIndex,
         installedAt,
         scheduledNextChange,
         removedAt: removedAt || null,
@@ -138,259 +119,200 @@ const RecordFormModalContent: React.FC<ContentProps> = ({
         notes: notes.trim(),
         status,
       });
-
       onClose();
-    } catch (err: any) {
-      setErrors({ form: err.message || 'Erro ao salvar registro.' });
+    } catch (err) {
+      setErrors({ form: err instanceof Error ? err.message : 'Erro ao salvar registro.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const currentPosInfo = POSITIONS_DATA.find((p) => p.id === Number(positionId));
+  const posAtual = POSITIONS_DATA.find((p) => p.id === Number(positionId));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
-        {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-emerald-800 to-emerald-900 text-white flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <FileText className="w-5 h-5 text-emerald-300 shrink-0" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bold text-sm sm:text-base leading-tight">
-                  {isEditing ? 'Editar Registro' : 'Novo Registro de Campo'}
-                </h3>
-                {isEditing && (
-                  <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-white/20 text-emerald-100 font-bold">
-                    {recordToEdit.id}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-emerald-200/90 font-medium mt-0.5">
-                SAF {nomeUnidade} • Rodízio de Sensores
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="w-10 h-10 flex items-center justify-center rounded-xl text-emerald-200 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50 cursor-pointer"
-            aria-label="Fechar modal"
-          >
-            <X className="w-5 h-5" />
+    <Janela
+      titulo={isEditing ? `Editar ${recordToEdit!.id}` : 'Novo registro de campo'}
+      subtitulo={`${nomeUnidade} · lançamento manual`}
+      icone={<FileText className="h-5 w-5" />}
+      onFechar={onClose}
+      bloquearFechar={isSubmitting}
+      rodape={
+        <>
+          <button type="button" onClick={onClose} disabled={isSubmitting} className={estilos.botaoSecundario}>
+            Cancelar
           </button>
-        </div>
-
-        {/* Global form error message */}
-        {errors.form && (
-          <div className="mx-6 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-            <span>{errors.form}</span>
+          <button type="submit" form="form-registro" disabled={isSubmitting} className={estilos.botaoPrincipal}>
+            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {isEditing ? 'Salvar alterações' : 'Cadastrar'}
+          </button>
+        </>
+      }
+    >
+      <form id="form-registro" onSubmit={handleSubmit} noValidate className="space-y-5">
+        {/* Onde: posição em destaque, como no sorteio */}
+        <section aria-label="Posição" className="flex items-stretch gap-3">
+          <div className="flex w-24 shrink-0 flex-col items-center justify-center rounded-2xl bg-broto-100 p-3 text-center ring-1 ring-folha-600/40">
+            <span className="text-xs text-slate-600">Posição</span>
+            <span className="font-display text-3xl font-semibold leading-tight text-grafite tabular-nums">{posAtual?.formattedId}</span>
+            <span className="text-xs text-slate-600">
+              C{posAtual?.cellId} · P{posAtual?.plantIndex}
+            </span>
           </div>
-        )}
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3.5">
-            {/* Cycle */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Ciclo
-              </label>
-              <input
-                type="number"
-                min="1"
-                required
-                disabled={isSubmitting}
-                value={cycleNumber}
-                onChange={(e) => setCycleNumber(Number(e.target.value))}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden disabled:bg-slate-100"
-              />
-              {errors.cycleNumber && (
-                <p className="text-[11px] text-rose-600 mt-1">{errors.cycleNumber}</p>
-              )}
-            </div>
-
-            {/* Position Selector */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Local SAF
+          <div className="grid min-w-0 flex-1 grid-cols-[1fr_5.5rem] gap-3">
+            <div className="min-w-0">
+              <label htmlFor="reg-posicao" className={estilos.rotulo}>
+                Planta
               </label>
               <select
+                id="reg-posicao"
                 value={positionId}
                 disabled={isSubmitting}
                 onChange={(e) => setPositionId(Number(e.target.value))}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden disabled:bg-slate-100"
+                className={estilos.campo}
               >
-                {POSITIONS_DATA.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    Célula {p.cellId} - Planta {p.plantIndex} (Pos #{p.formattedId})
-                  </option>
+                {CELLS_METADATA.map((cel) => (
+                  <optgroup key={cel.id} label={cel.name}>
+                    {POSITIONS_DATA.filter((p) => p.cellId === cel.id).map((p) => (
+                      <option key={p.id} value={p.id}>
+                        #{p.formattedId} · planta {p.plantIndex}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
-          </div>
-
-          {currentPosInfo && (
-            <div className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 flex items-center justify-between">
-              <span>Célula {currentPosInfo.cellId} • Planta {currentPosInfo.plantIndex}</span>
-              <span className="text-slate-500 font-mono">Posição #{currentPosInfo.formattedId}</span>
-            </div>
-          )}
-
-          {/* Dates Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-emerald-700" />
-                Data de Instalação *
+              <label htmlFor="reg-ciclo" className={estilos.rotulo}>
+                Ciclo
               </label>
               <input
-                type="date"
-                required
+                id="reg-ciclo"
+                type="number"
+                min="1"
+                value={cycleNumber}
                 disabled={isSubmitting}
-                value={installedAt}
-                onChange={(e) => handleInstalledAtChange(e.target.value)}
-                className={`w-full px-3 py-2 text-xs sm:text-sm bg-white border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden font-mono disabled:bg-slate-100 ${
-                  errors.installedAt ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
-                }`}
+                onChange={(e) => setCycleNumber(Number(e.target.value))}
+                className={`${estilos.campo} tabular-nums`}
               />
-              {errors.installedAt && (
-                <p className="text-[11px] text-rose-600 mt-1">{errors.installedAt}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-emerald-700" />
-                Previsão da Próxima Troca *
-              </label>
-              <input
-                type="date"
-                required
-                disabled={isSubmitting}
-                value={scheduledNextChange}
-                onChange={(e) => {
-                  setScheduledNextChange(e.target.value);
-                  if (errors.scheduledNextChange) {
-                    setErrors((prev) => ({ ...prev, scheduledNextChange: '' }));
-                  }
-                }}
-                className={`w-full px-3 py-2 text-xs sm:text-sm bg-white border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden font-mono disabled:bg-slate-100 ${
-                  errors.scheduledNextChange ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
-                }`}
-              />
-              {errors.scheduledNextChange && (
-                <p className="text-[11px] text-rose-600 mt-1">{errors.scheduledNextChange}</p>
-              )}
+              <Erro texto={errors.cycleNumber} />
             </div>
           </div>
+        </section>
 
-          {/* Removal Date & Status */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Data de Retirada
-              </label>
-              <input
-                type="date"
-                disabled={isSubmitting}
-                value={removedAt}
-                onChange={(e) => setRemovedAt(e.target.value)}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden font-mono disabled:bg-slate-100"
-              />
-              <span className="text-[10px] text-slate-400">Em branco se ainda ativo em campo</span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Status
-              </label>
-              <select
-                value={status}
-                disabled={isSubmitting}
-                onChange={(e) => setStatus(e.target.value as any)}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden disabled:bg-slate-100"
-              >
-                <option value="active">🟢 Ativo (em campo)</option>
-                <option value="completed">🔵 Concluído</option>
-                <option value="scheduled">⚪ Agendado</option>
-              </select>
-            </div>
+        <fieldset>
+          <legend className={estilos.rotulo}>Status</legend>
+          <div className="flex flex-wrap gap-2">
+            {STATUS.map((s) => {
+              const ativo = s.valor === status;
+              return (
+                <label
+                  key={s.valor}
+                  className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-folha-600 ${
+                    ativo ? 'bg-folha-700 text-white' : 'bg-papel/70 text-slate-700 hover:bg-folha-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="reg-status"
+                    className="sr-only"
+                    checked={ativo}
+                    disabled={isSubmitting}
+                    onChange={() => setStatus(s.valor)}
+                  />
+                  <span className={`h-2.5 w-2.5 rounded-full ${ativo && s.valor === 'scheduled' ? 'border-2 border-dashed border-white' : s.ponto}`} />
+                  {s.texto}
+                </label>
+              );
+            })}
           </div>
+        </fieldset>
 
-          {/* Responsible */}
+        <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
-              <UserCheck className="w-3.5 h-3.5 text-emerald-700" />
-              Responsável Técnico *
+            <label htmlFor="reg-instalacao" className={estilos.rotulo}>
+              <Calendar className="h-4 w-4 text-folha-600" />
+              Instalação
             </label>
             <input
-              type="text"
-              required
+              id="reg-instalacao"
+              type="date"
+              value={installedAt}
               disabled={isSubmitting}
-              value={responsible}
-              onChange={(e) => {
-                setResponsible(e.target.value);
-                if (errors.responsible) setErrors((prev) => ({ ...prev, responsible: '' }));
-              }}
-              placeholder="Ex: Ábner Lucas / Técnico IFPA"
-              className={`w-full px-3 py-2 text-xs sm:text-sm bg-white border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden disabled:bg-slate-100 ${
-                errors.responsible ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
-              }`}
+              onChange={(e) => handleInstalledAtChange(e.target.value)}
+              className={`${estilos.campo} tabular-nums`}
             />
-            {errors.responsible && (
-              <p className="text-[11px] text-rose-600 mt-1">{errors.responsible}</p>
-            )}
+            <Erro texto={errors.installedAt} />
           </div>
-
-{/* Notes */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5 text-emerald-700" />
-              Observações de Campo
+            <label htmlFor="reg-troca" className={estilos.rotulo}>
+              Próxima troca
             </label>
-            <textarea
-              rows={2}
+            <input
+              id="reg-troca"
+              type="date"
+              value={scheduledNextChange}
               disabled={isSubmitting}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex.: troca feita após a irrigação, mato roçado no dia anterior..."
-              className="w-full px-3 py-2 text-xs sm:text-sm bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-hidden resize-none disabled:bg-slate-100"
+              onChange={(e) => setScheduledNextChange(e.target.value)}
+              className={`${estilos.campo} tabular-nums`}
             />
+            <Erro texto={errors.scheduledNextChange} />
           </div>
+          <div>
+            <label htmlFor="reg-retirada" className={estilos.rotulo}>
+              Retirada
+            </label>
+            <input
+              id="reg-retirada"
+              type="date"
+              value={removedAt}
+              disabled={isSubmitting}
+              onChange={(e) => setRemovedAt(e.target.value)}
+              className={`${estilos.campo} tabular-nums`}
+            />
+            <Erro texto={errors.removedAt} />
+          </div>
+        </div>
+        <p className="-mt-3 text-xs text-slate-600">A retirada fica em branco enquanto o sensor estiver em campo.</p>
 
-          {/* Buttons */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-xs transition-all flex items-center gap-1.5 disabled:opacity-75"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Salvando...</span>
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>{isEditing ? 'Salvar Alterações' : 'Cadastrar'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div>
+          <label htmlFor="reg-responsavel" className={estilos.rotulo}>
+            <UserCheck className="h-4 w-4 text-folha-600" />
+            Responsável técnico
+          </label>
+          <input
+            id="reg-responsavel"
+            value={responsible}
+            disabled={isSubmitting}
+            onChange={(e) => {
+              setResponsible(e.target.value);
+              if (errors.responsible) setErrors((prev) => ({ ...prev, responsible: '' }));
+            }}
+            className={estilos.campo}
+          />
+          <Erro texto={errors.responsible} />
+        </div>
+
+        <div>
+          <label htmlFor="reg-obs" className={estilos.rotulo}>
+            Observações de campo <span className="font-normal text-slate-500">(opcional)</span>
+          </label>
+          <textarea
+            id="reg-obs"
+            rows={2}
+            value={notes}
+            disabled={isSubmitting}
+            placeholder="Ex.: troca feita após a irrigação, mato roçado no dia anterior..."
+            onChange={(e) => setNotes(e.target.value)}
+            className={`${estilos.campo} resize-y`}
+          />
+        </div>
+
+        {errors.form && (
+          <p role="alert" className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            {errors.form}
+          </p>
+        )}
+      </form>
+    </Janela>
   );
-};
+}

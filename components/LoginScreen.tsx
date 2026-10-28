@@ -69,7 +69,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onAuthSuccess }) => {
               <h1 className="font-display text-3xl font-semibold tracking-tight text-grafite">MonitorAçaí</h1>
               <p className="flex items-center gap-1 text-sm text-slate-600">
                 <MapPin className="h-3.5 w-3.5 text-folha-600" />
-                SAF de açaí do IFPA Campus Breves
+                SAFs de açaí de Breves e Muaná
               </p>
             </div>
           </div>

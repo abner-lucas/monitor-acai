@@ -115,7 +115,7 @@ function Marcador({
   children?: React.ReactNode;
 }) {
   return (
-    <div className={`rounded-2xl p-3.5 transition-colors ${marcado ? 'bg-broto-100/60 ring-1 ring-folha-600/30' : 'bg-papel/50'}`}>
+    <div className={`min-w-0 rounded-2xl p-3.5 transition-colors ${marcado ? 'bg-broto-100/60 ring-1 ring-folha-600/30' : 'bg-papel/50'}`}>
       <label className="flex cursor-pointer items-start gap-3">
         <input
           type="checkbox"
@@ -128,7 +128,7 @@ function Marcador({
           {texto && <span className="text-slate-600">{texto}</span>}
         </span>
       </label>
-      {children && <div className="mt-3 pl-8">{children}</div>}
+      {children && <div className="mt-3 min-w-0 pl-8">{children}</div>}
     </div>
   );
 }
@@ -522,7 +522,7 @@ export function FormularioRelatorio({
             const posicao = anterior ? origem!.positionId : record.positionId;
             const nome = nomeFoto(unidade, record.installedAt, posicao, f.tipo);
             return (
-              <li key={f.numero}>
+              <li key={f.numero} className="min-w-0">
                 <Marcador
                   titulo={`Foto ${doisDigitos(f.numero)}: ${f.titulo}`}
                   texto={anterior ? 'Antes da desinstalação, na célula de origem.' : 'Instalação concluída, na célula de destino.'}

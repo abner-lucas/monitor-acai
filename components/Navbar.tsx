@@ -110,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className="fixed inset-0 z-10"
                     onClick={() => setExportOpen(false)}
                   />
-                  <div role="menu" className="absolute right-0 mt-2 w-52 bg-white text-grafite rounded-2xl shadow-xl ring-1 ring-black/5 p-1.5 z-20 animate-in fade-in zoom-in-95 slide-in-from-top-1 duration-200">
+                  <div role="menu" className="fixed left-4 right-4 top-16 sm:absolute sm:left-auto sm:right-0 sm:top-auto mt-2 sm:w-52 bg-white text-grafite rounded-2xl shadow-xl ring-1 ring-black/5 p-1.5 z-20 animate-in fade-in zoom-in-95 slide-in-from-top-1 duration-200">
                     <button
                       id="btn-export-excel"
                       onClick={() => {

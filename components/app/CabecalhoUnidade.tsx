@@ -58,7 +58,7 @@ export function CabecalhoUnidade({ unidade, currentCycle }: { unidade: Unidade; 
 
       <nav
         aria-label={`Seções de ${unidade.nome}`}
-        className="relative inline-flex items-center gap-0.5 self-start rounded-full bg-folha-100/70 p-1 text-sm font-medium ring-1 ring-folha-100 sm:self-auto"
+        className="relative flex w-full items-center gap-0.5 self-start rounded-full sm:inline-flex sm:w-auto bg-folha-100/70 p-1 text-sm font-medium ring-1 ring-folha-100 sm:self-auto"
       >
         {PAGINAS.map(({ trecho, rotulo, icone: Icone }) => {
           const ativa = trecho === paginaAtual;
@@ -67,7 +67,7 @@ export function CabecalhoUnidade({ unidade, currentCycle }: { unidade: Unidade; 
               key={rotulo}
               href={`/${unidade.id}${trecho ? `/${trecho}` : ''}`}
               aria-current={ativa ? 'page' : undefined}
-              className={`relative z-0 flex min-h-9 items-center gap-1.5 rounded-full px-3.5 py-1.5 transition-colors duration-300 ${
+              className={`relative z-0 flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 sm:flex-none sm:px-3.5 transition-colors duration-300 ${
                 ativa ? 'text-white' : 'text-folha-800 hover:text-folha-900'
               }`}
             >
@@ -78,7 +78,7 @@ export function CabecalhoUnidade({ unidade, currentCycle }: { unidade: Unidade; 
                   transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 />
               )}
-              <Icone className="h-4 w-4" />
+              <Icone className="hidden h-4 w-4 min-[400px]:block" />
               <span>{rotulo}</span>
             </Link>
           );
