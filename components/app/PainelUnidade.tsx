@@ -16,6 +16,7 @@ import { DeleteConfirmModal } from '@/components/DeleteConfirmModal';
 import { CycleCompletedModal } from '@/components/CycleCompletedModal';
 import { ProjectInfoModal } from '@/components/ProjectInfoModal';
 import { ManageUsersModal } from '@/components/ManageUsersModal';
+import { PerfilModal } from '@/components/PerfilModal';
 
 type DadosRegistro = {
   id?: string;
@@ -95,6 +96,7 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
   const [isCycleCompleteOpen, setIsCycleCompleteOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isManageUsersOpen, setIsManageUsersOpen] = useState(false);
+  const [isPerfilOpen, setIsPerfilOpen] = useState(false);
 
   // Carga inicial da unidade: o estado só muda quando as respostas chegam (e só se o painel
   // ainda estiver aberto, para não misturar unidades ao trocar rápido entre Breves e Muaná).
@@ -285,6 +287,7 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
           currentUser={usuario}
           onSignOut={sair}
           onOpenManageUsers={() => setIsManageUsersOpen(true)}
+          onOpenPerfil={() => setIsPerfilOpen(true)}
         />
 
         <main
@@ -352,6 +355,8 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
         />
 
         <ProjectInfoModal isOpen={isInfoOpen} onClose={() => setIsInfoOpen(false)} />
+
+        <PerfilModal isOpen={isPerfilOpen} onClose={() => setIsPerfilOpen(false)} usuario={usuario} onAviso={aviso} />
 
         <ManageUsersModal isOpen={isManageUsersOpen} onClose={() => setIsManageUsersOpen(false)} onShowToast={aviso} />
       </div>

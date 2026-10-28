@@ -1,4 +1,4 @@
-import { PositionInfo, RotationRecord } from './types';
+import { PositionInfo } from './types';
 
 export const TOTAL_POSITIONS = 18;
 export const DAYS_PER_ROTATION = 14;
@@ -178,43 +178,3 @@ export const POSITIONS_DATA: PositionInfo[] = [
 export const getPositionById = (id: number): PositionInfo | undefined => {
   return POSITIONS_DATA.find((p) => p.id === id);
 };
-
-// Initial seeded records matching user specifications:
-// 1. Instalação na planta 01 na célula 1 no dia 15/08 (concluído)
-// 2. Instalação na planta 02 na célula 2 no dia 03/09 (ativo)
-export const INITIAL_SEEDED_RECORDS: RotationRecord[] = [
-  {
-    id: 'REG-2026-001',
-    cycleNumber: 1,
-    positionId: 1,
-    cellId: 1,
-    plantIndex: 1,
-    installedAt: '2026-08-15',
-    scheduledNextChange: '2026-08-29',
-    removedAt: '2026-09-03',
-    responsible: 'Ábner Lucas / Técnico IFPA',
-    notes: 'Instalação inicial da campanha. Sensores FDR posicionados a 20cm e 40cm de profundidade.',
-    status: 'completed',
-    batteryLevel: 98,
-    signalQuality: 'Excelente',
-    createdAt: '2026-08-15T09:00:00Z',
-    updatedAt: '2026-09-03T10:00:00Z',
-  },
-  {
-    id: 'REG-2026-002',
-    cycleNumber: 1,
-    positionId: 8,
-    cellId: 2,
-    plantIndex: 2,
-    installedAt: '2026-09-03',
-    scheduledNextChange: '2026-09-17',
-    removedAt: null,
-    responsible: 'Ábner Lucas / Técnico IFPA',
-    notes: 'Sensor ativo em campo. Baterias recarregadas e transmissão de telemetria LoRa operando normalmente.',
-    status: 'active',
-    batteryLevel: 96,
-    signalQuality: 'Excelente',
-    createdAt: '2026-09-03T10:00:00Z',
-    updatedAt: '2026-09-03T10:00:00Z',
-  },
-];

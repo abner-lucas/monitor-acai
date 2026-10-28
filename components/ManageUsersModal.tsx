@@ -6,6 +6,7 @@ import { authService, SUPERUSER_EMAIL } from '@/lib/services/authService';
 import { AuthorizedUser } from '@/lib/types';
 import { Janela, estilos } from '@/components/vivo/Janela';
 import { AbasDeslizantes } from '@/components/vivo/AbasDeslizantes';
+import { Avatar } from '@/components/vivo/Avatar';
 
 interface ManageUsersModalProps {
   isOpen: boolean;
@@ -169,14 +170,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                   className={`flex items-center justify-between gap-3 rounded-2xl p-3.5 ${isSuper ? 'bg-acai-100/60' : 'bg-papel/60'}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full font-display text-lg font-semibold ${
-                        isSuper ? 'bg-acai-900 text-white' : 'bg-folha-100 text-folha-800'
-                      }`}
-                      aria-hidden="true"
-                    >
-                      {(u.fullName?.[0] || u.email[0] || 'P').toUpperCase()}
-                    </span>
+                    <Avatar nome={u.fullName || u.email} url={u.avatarUrl} destaque={isSuper} tamanho="md" />
                     <div className="min-w-0">
                       <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="truncate font-semibold text-grafite">{u.fullName}</span>

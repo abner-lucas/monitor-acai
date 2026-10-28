@@ -16,6 +16,28 @@ Em produção: **https://monitoracai.profabnerlucas.com** (Hostinger).
 
 ---
 
+## 📁 Estrutura
+
+```
+app/
+  (painel)/[unidade]/        páginas de cada unidade (/breves, /muana)
+    page.tsx                 painel: sensor em campo, indicadores e planta baixa
+    historico/               tabela de registros
+    relatorios/              lista, folha A4 e formulário do relatório de campo
+  api/                       rotas do servidor (login, registros, rodízios, relatórios, fotos, equipe)
+components/
+  app/                       sessão, painel da unidade e cabeçalho
+  graficos/                  indicadores do ciclo
+  relatorio/                 folha e formulário do relatório
+  vivo/                      peças visuais compartilhadas (janela, abas, avatar, animações)
+lib/
+  server/                    acesso ao MySQL (só no servidor)
+  services/                  chamadas do navegador para a API
+  relatorio.ts, unidades.ts, constants.ts, storage.ts
+docs/esquema.jpeg            croqui original de campo do SAF
+scripts/verify-all-3x.mjs    verificação rápida (npm run verificar, com o servidor em localhost:3000)
+```
+
 ## 🌿 Como usar no dia de campo
 
 1. No painel da unidade (Breves ou Muaná), toque em **Registrar rodízio**.

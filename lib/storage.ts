@@ -2,56 +2,7 @@ import * as XLSX from 'xlsx';
 import { RotationRecord, PositionStatus, PositionInfo, CycleStats } from './types';
 import { codigoRelatorio, rodiziosDoCiclo, situacaoRelatorio, type Relatorio } from './relatorio';
 import type { Unidade } from './unidades';
-import { POSITIONS_DATA, INITIAL_SEEDED_RECORDS, TOTAL_POSITIONS, DAYS_PER_ROTATION, TOTAL_WEEKS } from './constants';
-
-const STORAGE_KEY_RECORDS = 'monitor_acai_records_v2';
-const STORAGE_KEY_CYCLE = 'monitor_acai_cycle_v2';
-
-export const getStoredRecords = (): RotationRecord[] => {
-  if (typeof window === 'undefined') return INITIAL_SEEDED_RECORDS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_RECORDS);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(INITIAL_SEEDED_RECORDS));
-      return INITIAL_SEEDED_RECORDS;
-    }
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : INITIAL_SEEDED_RECORDS;
-  } catch (err) {
-    console.error('Error reading localStorage:', err);
-    return INITIAL_SEEDED_RECORDS;
-  }
-};
-
-export const saveStoredRecords = (records: RotationRecord[]): void => {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(records));
-  } catch (err) {
-    console.error('Error saving to localStorage:', err);
-  }
-};
-
-export const getStoredCycle = (): number => {
-  if (typeof window === 'undefined') return 1;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_CYCLE);
-    if (!raw) return 1;
-    const num = parseInt(raw, 10);
-    return isNaN(num) || num < 1 ? 1 : num;
-  } catch {
-    return 1;
-  }
-};
-
-export const saveStoredCycle = (cycle: number): void => {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY_CYCLE, cycle.toString());
-  } catch (err) {
-    console.error('Error saving cycle:', err);
-  }
-};
+import { POSITIONS_DATA, TOTAL_POSITIONS, DAYS_PER_ROTATION, TOTAL_WEEKS } from './constants';
 
 // Date helper: get today's local date as YYYY-MM-DD
 export const getTodayLocalDateStr = (): string => {

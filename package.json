@@ -7,15 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "clean": "next clean"
+    "verificar": "node scripts/verify-all-3x.mjs"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.1",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "lucide-react": "^0.553.0",
     "motion": "^12.23.24",
     "mysql2": "^3.24.6",
@@ -23,12 +20,10 @@
     "postcss": "^8.5.6",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
-    "tailwind-merge": "^3.3.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.11",
-    "@tailwindcss/typography": "^0.5.19",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
     "@types/react": "^19",

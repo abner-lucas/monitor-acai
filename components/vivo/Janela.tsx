@@ -61,7 +61,7 @@ export function Janela({
           <div className="flex items-start justify-between gap-3 px-6 pt-6">
             <div className="flex min-w-0 items-center gap-3">
               {icone && (
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-acai-100 text-acai-800">{icone}</span>
+                <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-acai-100 text-acai-800 min-[400px]:flex">{icone}</span>
               )}
               <div className="min-w-0">
                 <h2 className="font-display text-2xl font-semibold tracking-tight text-grafite">{titulo}</h2>

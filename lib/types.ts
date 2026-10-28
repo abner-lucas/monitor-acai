@@ -50,6 +50,8 @@ export interface AuthUser {
   email: string;
   fullName?: string;
   role?: string;
+  /** Endereço da foto do usuário, ou null se não tiver foto. */
+  avatarUrl?: string | null;
 }
 
 export interface AuthorizedUser {
@@ -60,4 +62,5 @@ export interface AuthorizedUser {
   password?: string;
   isActive: boolean;
   createdAt: string;
+  avatarUrl?: string | null;
 }

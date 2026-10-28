@@ -17,6 +17,7 @@ import type { Relatorio } from '@/lib/relatorio';
 import type { Unidade } from '@/lib/unidades';
 import { SUPERUSER_EMAIL } from '@/lib/services/authService';
 import { MarcaAcai } from '@/components/vivo/MarcaAcai';
+import { Avatar } from '@/components/vivo/Avatar';
 
 interface NavbarProps {
   unidade: Unidade;
@@ -28,6 +29,7 @@ interface NavbarProps {
   currentUser?: AuthUser | null;
   onSignOut?: () => void;
   onOpenManageUsers?: () => void;
+  onOpenPerfil?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -40,6 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   onSignOut,
   onOpenManageUsers,
+  onOpenPerfil,
 }) => {
   const [exportOpen, setExportOpen] = React.useState(false);
 
@@ -170,16 +173,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                 </div>
 
-                <div
-                  className={`hidden sm:flex w-9 h-9 rounded-full items-center justify-center font-display font-semibold text-sm ring-2 ${
-                    isSuperuser
-                      ? 'bg-broto-400 text-acai-950 ring-broto-400/30'
-                      : 'bg-acai-100 text-acai-900 ring-white/20'
-                  }`}
-                  title={`${currentUser.fullName || currentUser.email} (${isSuperuser ? 'Superusuário' : 'Pesquisador'})`}
+                <button
+                  type="button"
+                  onClick={onOpenPerfil}
+                  className="inline-flex rounded-full transition-transform hover:scale-105 cursor-pointer"
+                  title="Minha foto"
+                  aria-label="Minha foto"
                 >
-                  {(currentUser.fullName?.[0] || currentUser.email[0] || 'P').toUpperCase()}
-                </div>
+                  <Avatar nome={currentUser.fullName || currentUser.email} url={currentUser.avatarUrl} destaque={!!isSuperuser} />
+                </button>
 
                 {onSignOut && (
                   <button

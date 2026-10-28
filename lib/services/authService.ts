@@ -110,6 +110,17 @@ class AuthService {
   }
 
   /**
+   * Troca (ou remove, com null) a foto do usuário logado. Devolve o usuário atualizado.
+   */
+  public async atualizarFoto(imagem: string | null): Promise<AuthUser> {
+    const { user } = await apiRequest<{ user: AuthUser }>('/api/auth/me/avatar', imagem
+      ? { method: 'PUT', body: JSON.stringify({ imagem }) }
+      : { method: 'DELETE' });
+    this.notifyListeners(user);
+    return user;
+  }
+
+  /**
    * Encerra a sessão do usuário
    */
   public async signOut(): Promise<void> {

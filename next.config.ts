@@ -10,19 +10,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Allow access to remote image placeholder.
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**', // This allows any path under the hostname
-      },
-    ],
-  },
-  // Standalone output is for Docker containers; Vercel handles output automatically.
-  ...(process.env.VERCEL ? {} : { output: 'standalone' }),
+  // Servidor standalone: é o formato que a Hostinger publica e reinicia a cada build.
+  output: 'standalone',
   transpilePackages: ['motion'],
   webpack: (config, { dev }) => {
     if (dev) {

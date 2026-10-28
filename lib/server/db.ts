@@ -60,6 +60,9 @@ const SCHEMA_STATEMENTS = [
   // Bancos criados antes da separação por unidade: todos os registros antigos são de Breves.
   `ALTER TABLE rotation_records ADD COLUMN IF NOT EXISTS site VARCHAR(20) NOT NULL DEFAULT 'breves' AFTER id`,
   `CREATE INDEX IF NOT EXISTS idx_rotation_records_site_cycle ON rotation_records (site, cycle_number)`,
+  // Foto do usuário (data URL já reduzida no navegador) e quando foi trocada.
+  `ALTER TABLE authorized_users ADD COLUMN IF NOT EXISTS avatar MEDIUMTEXT NULL`,
+  `ALTER TABLE authorized_users ADD COLUMN IF NOT EXISTS avatar_updated_at DATETIME(3) NULL`,
   // Relatório de campo de cada rodízio; os campos do formulário ficam em JSON (lib/relatorio.ts).
   `CREATE TABLE IF NOT EXISTS rotation_reports (
     record_id VARCHAR(40) NOT NULL,
