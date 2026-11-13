@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, KeyRound, Loader2, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
+import { CheckCircle2, Eye, EyeOff, HardDrive, KeyRound, Loader2, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
 import { authService, SUPERUSER_EMAIL } from '@/lib/services/authService';
 import { AuthorizedUser } from '@/lib/types';
 import { Janela, estilos } from '@/components/vivo/Janela';
 import { AbasDeslizantes } from '@/components/vivo/AbasDeslizantes';
 import { Avatar } from '@/components/vivo/Avatar';
+import { PainelDrive } from '@/components/PainelDrive';
 
 interface ManageUsersModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ function gerarSenha(): string {
 function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'>) {
   const [users, setUsers] = useState<AuthorizedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'add'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'add' | 'drive'>('users');
 
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -146,6 +147,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
           abas={[
             { id: 'users', rotulo: `Equipe (${users.length})`, icone: Users },
             { id: 'add', rotulo: 'Autorizar novo', icone: UserPlus },
+            { id: 'drive', rotulo: 'Fotos', icone: HardDrive },
           ]}
           ativa={activeTab}
           onMudar={setActiveTab}
@@ -283,6 +285,8 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
           </div>
         </form>
       )}
+
+      {activeTab === 'drive' && <PainelDrive onShowToast={onShowToast} />}
     </Janela>
   );
 }

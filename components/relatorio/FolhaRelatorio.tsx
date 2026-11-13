@@ -5,7 +5,8 @@ import {
   FOTOS_RELATORIO,
   ITENS_DESINSTALACAO,
   doisDigitos,
-  nomeFoto,
+  arquivoFoto,
+  type FotoRelatorio,
   type LadoPosicao,
   type Relatorio,
   type Rodizio,
@@ -100,11 +101,14 @@ export function FolhaRelatorio({
   rodizio,
   relatorio,
   codigo,
+  fotosEnviadas,
 }: {
   unidade: Unidade;
   rodizio: Rodizio;
   relatorio: Relatorio;
   codigo: string;
+  /** Fotos já enviadas ao Drive, por número: contam como registradas e mostram o nome real do arquivo. */
+  fotosEnviadas?: Map<number, FotoRelatorio>;
 }) {
   const { record, origem } = rodizio;
   const d = relatorio.dados;
@@ -310,7 +314,7 @@ export function FolhaRelatorio({
 
       <Secao numero={6} titulo="Relatório fotográfico padronizado">
         <p className="italic text-slate-600">
-          Fotos tiradas na luz do dia, em alta resolução e renomeadas no padrão DATA_LOCAL_POSICAO_TIPO.jpg.
+          Fotos tiradas na luz do dia, em alta resolução e com o nome no padrão DATA_UNIDADE_C1R1_FOTO01.jpg.
         </p>
         {(['anterior', 'posterior'] as const).map((bloco) => {
           const fotos = FOTOS_RELATORIO.filter((f) => f.bloco === bloco);
@@ -328,14 +332,14 @@ export function FolhaRelatorio({
                 <ul className="mt-1.5 space-y-1.5">
                   {fotos.map((f) => (
                     <li key={f.numero}>
-                      <Marca ok={d.fotos[f.numero - 1]}>
+                      <Marca ok={d.fotos[f.numero - 1] || !!fotosEnviadas?.has(f.numero)}>
                         <strong className="font-semibold">
                           Foto {doisDigitos(f.numero)} — {f.titulo}:
                         </strong>{' '}
                         {f.texto}
                         {posicao !== undefined && (
                           <span className="block break-all font-mono text-[11px] text-slate-500">
-                            {nomeFoto(unidade, record.installedAt, posicao, f.tipo)}
+                            {fotosEnviadas?.get(f.numero)?.nome ?? arquivoFoto(unidade, codigo, record.installedAt, f.numero, 'jpg')}
                           </span>
                         )}
                       </Marca>

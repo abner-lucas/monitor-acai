@@ -2,13 +2,11 @@
 
 import React, { useEffect, useId, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { AlertCircle, ArrowLeft, ArrowRight, Check, Copy, Loader2, Save } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, Check, Loader2, Save } from 'lucide-react';
 import {
   DATALOGGERS,
-  FOTOS_RELATORIO,
   ITENS_DESINSTALACAO,
   doisDigitos,
-  nomeFoto,
   pendenciasRelatorio,
   type DadosRelatorio,
   type LadoPosicao,
@@ -19,6 +17,7 @@ import {
 import type { Unidade } from '@/lib/unidades';
 import { formatDateBR } from '@/lib/storage';
 import { descricaoPosicao } from './comum';
+import { EnvioFotos } from './Fotos';
 
 export interface EstadoRelatorio {
   status: StatusRelatorio;
@@ -225,7 +224,6 @@ export function FormularioRelatorio({
   const [salvando, setSalvando] = useState(false);
   const [sujo, setSujo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [copiado, setCopiado] = useState<string | null>(null);
 
   const pendencias = pendenciasRelatorio(dados, primeira);
   const concluindo = status === 'concluido' || !!assinadoEm;
@@ -283,16 +281,6 @@ export function FormularioRelatorio({
   const finalizar = async () => {
     const ok = await salvar({ status: concluindo ? 'concluido' : 'rascunho', assinadoEm: assinadoEm || null, dados });
     if (ok) onFinalizado();
-  };
-
-  const copiarNome = async (nome: string) => {
-    try {
-      await navigator.clipboard.writeText(nome);
-      setCopiado(nome);
-      setTimeout(() => setCopiado((c) => (c === nome ? null : c)), 1500);
-    } catch {
-      setCopiado(null);
-    }
   };
 
   // ------------------------------------------------------------------ etapas
@@ -514,35 +502,12 @@ export function FormularioRelatorio({
 
     // 5. Fotos e conclusão
     <div key="fotos">
-      <Bloco titulo="Relatório fotográfico" descricao="Marque as fotos já registradas. O nome sugerido segue o padrão DATA_LOCAL_POSICAO_TIPO.jpg.">
-        <ul className="grid gap-2.5 md:grid-cols-2">
-          {FOTOS_RELATORIO.map((f, i) => {
-            const anterior = f.bloco === 'anterior';
-            if (anterior && primeira) return null;
-            const posicao = anterior ? origem!.positionId : record.positionId;
-            const nome = nomeFoto(unidade, record.installedAt, posicao, f.tipo);
-            return (
-              <li key={f.numero} className="min-w-0">
-                <Marcador
-                  titulo={`Foto ${doisDigitos(f.numero)}: ${f.titulo}`}
-                  texto={anterior ? 'Antes da desinstalação, na célula de origem.' : 'Instalação concluída, na célula de destino.'}
-                  marcado={dados.fotos[i]}
-                  onMudar={(v) => alterar((d) => ({ ...d, fotos: d.fotos.map((x, j) => (j === i ? v : x)) }))}
-                >
-                  <button
-                    type="button"
-                    onClick={() => copiarNome(nome)}
-                    className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-white px-2 py-1 font-mono text-xs text-slate-700 ring-1 ring-papel-linha hover:ring-folha-600 cursor-pointer"
-                    title="Copiar nome do arquivo"
-                  >
-                    <span className="truncate">{nome}</span>
-                    {copiado === nome ? <Check className="h-3.5 w-3.5 shrink-0 text-folha-700" /> : <Copy className="h-3.5 w-3.5 shrink-0" />}
-                  </button>
-                </Marcador>
-              </li>
-            );
-          })}
-        </ul>
+      <Bloco
+        titulo="Relatório fotográfico"
+        descricao="Envie a foto original de cada item. Ela vai para a pasta do projeto no Google Drive, já com o nome no padrão do projeto."
+      >
+        {/* Cada foto é salva na hora em que termina de subir; não depende do botão Salvar. */}
+        <EnvioFotos rodizio={rodizio} />
       </Bloco>
 
       <Bloco titulo="Ocorrências de campo e notas fenológicas" descricao="Irrigação durante a troca, chuva recente, plantas invasoras, sombreamento, pragas nas folhas monitoradas...">
@@ -619,6 +584,7 @@ export function FormularioRelatorio({
                   onClick={() => irPara(i)}
                   disabled={salvando}
                   aria-current={atual ? 'step' : undefined}
+                  aria-label={`Passo ${i + 1}: ${titulo}`}
                   className="group flex min-h-10 items-center gap-2 rounded-full pr-1 cursor-pointer disabled:cursor-wait"
                 >
                   <span

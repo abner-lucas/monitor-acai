@@ -3,10 +3,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { RotationRecord, PositionInfo, CycleStats } from '@/lib/types';
-import { DadosRelatorio, Relatorio, StatusRelatorio } from '@/lib/relatorio';
+import { DadosRelatorio, FotoRelatorio, Relatorio, StatusRelatorio } from '@/lib/relatorio';
 import { UNIDADES, Unidade, UnidadeId } from '@/lib/unidades';
 import { computeCycleStats, getAvailablePositionsForCycle } from '@/lib/storage';
 import { rotationServiceDa, reportService, campoService } from '@/lib/services';
+import { fotoService } from '@/lib/services/fotoService';
 import { useSessao } from '@/components/app/Sessao';
 import { CabecalhoUnidade } from '@/components/app/CabecalhoUnidade';
 import { Navbar } from '@/components/Navbar';
@@ -61,6 +62,10 @@ interface ContextoUnidade {
     dados: { status: StatusRelatorio; assinadoEm: string | null; dados: DadosRelatorio }
   ) => Promise<Relatorio>;
   hrefRelatorio: (recordId: string, editar?: boolean) => string;
+  /** Fotos de cada relatório (recordId -> número da foto -> foto). As imagens ficam no Google Drive. */
+  fotos: Map<string, Map<number, FotoRelatorio>>;
+  registrarFoto: (foto: FotoRelatorio) => void;
+  tirarFoto: (recordId: string, numero: number) => void;
 }
 
 const Contexto = createContext<ContextoUnidade | null>(null);
@@ -84,6 +89,7 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
 
   const [records, setRecords] = useState<RotationRecord[]>([]);
   const [listaRelatorios, setListaRelatorios] = useState<Relatorio[]>([]);
+  const [listaFotos, setListaFotos] = useState<FotoRelatorio[]>([]);
   const [currentCycle, setCurrentCycle] = useState(1);
   const [carregando, setCarregando] = useState(true);
   const [selectedPositionId, setSelectedPositionId] = useState<number | null>(null);
@@ -117,12 +123,48 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
       .finally(() => {
         if (ativo) setCarregando(false);
       });
+    // As fotos vêm à parte: se o Drive estiver fora do ar, o resto do painel funciona igual.
+    fotoService
+      .listar(unidadeId)
+      .then((fotos) => ativo && setListaFotos(fotos))
+      .catch(() => undefined);
     return () => {
       ativo = false;
     };
   }, [servico, unidadeId, aviso]);
 
+  // Volta da tela de consentimento do Google (Equipe -> Conectar Google Drive).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const drive = params.get('drive');
+    if (!drive) return;
+    const mensagens: Record<string, [ 'success' | 'error', string, string? ]> = {
+      conectado: ['success', 'Google Drive conectado', 'As fotos dos relatórios passam a ser guardadas na pasta do projeto.'],
+      cancelado: ['error', 'Conexão cancelada', 'O Google Drive não foi conectado.'],
+      negado: ['error', 'Sem permissão', 'Só o coordenador pode conectar o Google Drive.'],
+      erro: ['error', 'Não foi possível conectar o Google Drive', 'Tente de novo em Equipe.'],
+    };
+    const [tipo, titulo, texto] = mensagens[drive] ?? mensagens.erro;
+    aviso(tipo, titulo, texto);
+    params.delete('drive');
+    window.history.replaceState(null, '', window.location.pathname + (params.size ? `?${params}` : ''));
+  }, [aviso]);
+
   const relatorios = useMemo(() => new Map(listaRelatorios.map((r) => [r.recordId, r])), [listaRelatorios]);
+  const fotos = useMemo(() => {
+    const mapa = new Map<string, Map<number, FotoRelatorio>>();
+    for (const f of listaFotos) {
+      if (!mapa.has(f.recordId)) mapa.set(f.recordId, new Map());
+      mapa.get(f.recordId)!.set(f.numero, f);
+    }
+    return mapa;
+  }, [listaFotos]);
+  const registrarFoto = useCallback((foto: FotoRelatorio) => {
+    setListaFotos((prev) => [...prev.filter((f) => !(f.recordId === foto.recordId && f.numero === foto.numero)), foto]);
+  }, []);
+  const tirarFoto = useCallback((recordId: string, numero: number) => {
+    setListaFotos((prev) => prev.filter((f) => !(f.recordId === recordId && f.numero === numero)));
+  }, []);
   const stats = computeCycleStats(records, currentCycle);
   const availablePositions = getAvailablePositionsForCycle(records, currentCycle);
   const scheduledRecord = records.find((r) => r.cycleNumber === currentCycle && r.status === 'scheduled') || null;
@@ -265,6 +307,9 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
     abrirCicloCompleto: () => setIsCycleCompleteOpen(true),
     salvarRelatorio,
     hrefRelatorio,
+    fotos,
+    registrarFoto,
+    tirarFoto,
   };
 
   return (

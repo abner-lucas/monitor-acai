@@ -77,6 +77,23 @@ const SCHEMA_STATEMENTS = [
       ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT chk_rotation_reports_status CHECK (status IN ('rascunho', 'concluido'))
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+  // Fotos do relatório (1 a 8, como no formulário). A imagem fica no Google Drive; aqui só a referência.
+  `CREATE TABLE IF NOT EXISTS report_photos (
+    record_id VARCHAR(40) NOT NULL,
+    numero TINYINT NOT NULL,
+    drive_file_id VARCHAR(128) NOT NULL,
+    nome VARCHAR(255) NOT NULL,
+    mime VARCHAR(100) NOT NULL,
+    tamanho BIGINT NOT NULL,
+    largura INT NULL,
+    altura INT NULL,
+    enviada_por VARCHAR(255) NULL,
+    created_at DATETIME(3) NOT NULL,
+    PRIMARY KEY (record_id, numero),
+    CONSTRAINT fk_report_photos_record FOREIGN KEY (record_id) REFERENCES rotation_records (id)
+      ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT chk_report_photos_numero CHECK (numero BETWEEN 1 AND 8)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 ];
 
 /**

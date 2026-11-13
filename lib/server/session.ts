@@ -10,7 +10,7 @@ import type { NextResponse } from 'next/server';
 export const SESSION_COOKIE = 'monitoracai_session';
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 dias
 
-function getSecret(): string {
+export function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 32) {
     throw new Error('SESSION_SECRET ausente ou curto (mínimo de 32 caracteres).');
@@ -18,7 +18,8 @@ function getSecret(): string {
   return secret;
 }
 
-function sign(payload: string): string {
+/** Assinatura HMAC com o SESSION_SECRET (também usada no state do OAuth do Google Drive). */
+export function sign(payload: string): string {
   return createHmac('sha256', getSecret()).update(payload).digest('base64url');
 }
 

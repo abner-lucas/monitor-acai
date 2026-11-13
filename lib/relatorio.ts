@@ -175,10 +175,39 @@ export function codigoRelatorio(unidade: Unidade, ciclo: number, numero: number)
 
 export const doisDigitos = (n: number) => String(n).padStart(2, '0');
 
-/** Nome sugerido para cada foto, no padrão DATA_LOCAL_POSICAO_TIPO.jpg. */
-export function nomeFoto(unidade: Unidade, data: string, posicao: number, tipo: string): string {
-  const nome = unidade.nome.normalize('NFD').replace(/[̀-ͯ]/g, '');
-  return `${data.replace(/-/g, '')}_${nome}_${doisDigitos(posicao)}_${tipo}.jpg`;
+/** Foto de um relatório guardada no Google Drive (a imagem em si nunca passa pelo banco). */
+export interface FotoRelatorio {
+  recordId: string;
+  /** 1 a 8, na ordem de FOTOS_RELATORIO. */
+  numero: number;
+  /** Nome do arquivo no Drive, ex.: 20260815_BREVES_C1R1_FOTO01.jpg. */
+  nome: string;
+  tamanho: number;
+  largura: number | null;
+  altura: number | null;
+  /** Muda a cada troca da foto; entra no endereço da imagem para o cache do navegador. */
+  versao: string;
+  enviadaPor: string | null;
+  enviadaEm: string;
+}
+
+/** Tipos aceitos no envio (HEIC é o padrão das câmeras do iPhone). */
+export const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+export const TAMANHO_MAX_FOTO = 200 * 1024 * 1024;
+
+const semAcento = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+/** Parte do código depois do nome da unidade: BrevesC1R2 -> C1R2. */
+const cicloRodizio = (unidade: Unidade, codigo: string) => codigo.slice(semAcento(unidade.nome).length);
+
+/** Pasta do relatório no Drive, no mesmo padrão da pasta de fotos do projeto: Relatório_Breves_C1R1. */
+export function pastaFotos(unidade: Unidade, codigo: string): string {
+  return `Relatório_${semAcento(unidade.nome)}_${cicloRodizio(unidade, codigo)}`;
+}
+
+/** Nome do arquivo no Drive: DATA_UNIDADE_C1R1_FOTO01.ext (data da instalação). */
+export function arquivoFoto(unidade: Unidade, codigo: string, data: string, numero: number, extensao: string): string {
+  return `${data.replace(/-/g, '')}_${semAcento(unidade.nome).toUpperCase()}_${cicloRodizio(unidade, codigo)}_FOTO${doisDigitos(numero)}.${extensao}`;
 }
 
 // ---------------------------------------------------------------------------

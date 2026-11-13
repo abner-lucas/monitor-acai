@@ -3,14 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'motion/react';
-import { ArrowRight, Dices } from 'lucide-react';
+import { ArrowRight, Camera, Dices } from 'lucide-react';
 import { useUnidade } from '@/components/app/PainelUnidade';
 import { SeloSituacao, descricaoPosicao } from '@/components/relatorio/comum';
+import { fotosAplicaveis } from '@/components/relatorio/Fotos';
 import { codigoRelatorio, doisDigitos, rodiziosDoCiclo, situacaoRelatorio } from '@/lib/relatorio';
 import { formatDateBR } from '@/lib/storage';
 
 export default function PaginaRelatorios() {
-  const { unidade, records, relatorios, currentCycle, hrefRelatorio, abrirRegistro } = useUnidade();
+  const { unidade, records, relatorios, currentCycle, hrefRelatorio, abrirRegistro, fotos } = useUnidade();
   const reduzir = useReducedMotion();
   const ciclos = Array.from(new Set([currentCycle, ...records.map((r) => r.cycleNumber)])).sort((a, b) => b - a);
   const [ciclo, setCiclo] = useState(currentCycle);
@@ -80,6 +81,8 @@ export default function PaginaRelatorios() {
             const pendente = !relatorio;
             const codigo = codigoRelatorio(unidade, ciclo, numero);
             const ultimo = i === rodizios.length - 1;
+            const totalFotos = fotosAplicaveis(rodizio).length;
+            const enviadas = fotos.get(record.id)?.size ?? 0;
             return (
               <motion.li
                 key={record.id}
@@ -115,7 +118,20 @@ export default function PaginaRelatorios() {
                         Sorteada
                       </span>
                     ) : (
-                      <SeloSituacao relatorio={relatorio} />
+                      <>
+                        {enviadas > 0 && (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold tabular-nums ${
+                              enviadas >= totalFotos ? 'bg-folha-50 text-folha-800' : 'bg-papel text-slate-700'
+                            }`}
+                            aria-label={`${enviadas} de ${totalFotos} fotos`}
+                          >
+                            <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                            {enviadas}/{totalFotos}
+                          </span>
+                        )}
+                        <SeloSituacao relatorio={relatorio} />
+                      </>
                     )}
                     <span className="hidden text-sm font-medium text-folha-700 group-hover:underline sm:inline">
                       {agendado ? 'Ver' : pendente ? 'Preencher' : 'Abrir'}

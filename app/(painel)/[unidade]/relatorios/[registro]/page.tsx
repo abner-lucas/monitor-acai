@@ -1,18 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, FilePen, Printer } from 'lucide-react';
+import { ArrowLeft, FilePen, Loader2, Printer } from 'lucide-react';
 import { useUnidade } from '@/components/app/PainelUnidade';
 import { FolhaRelatorio } from '@/components/relatorio/FolhaRelatorio';
 import { SeloSituacao } from '@/components/relatorio/comum';
+import { AnexoFotografico, GaleriaFotos, aguardarFotosDoAnexo } from '@/components/relatorio/Fotos';
 import { CABECALHO_RELATORIO, codigoRelatorio, rodizioDoRegistro } from '@/lib/relatorio';
 
 export default function PaginaRelatorio() {
   const { registro } = useParams<{ registro: string }>();
   const recordId = decodeURIComponent(registro);
-  const { unidade, records, relatorios, hrefRelatorio, abrirRegistro } = useUnidade();
+  const { unidade, records, relatorios, hrefRelatorio, abrirRegistro, fotos } = useUnidade();
+  const [preparando, setPreparando] = useState(false);
   const rodizio = rodizioDoRegistro(records, recordId);
   const relatorio = relatorios.get(recordId);
   const codigo = rodizio ? codigoRelatorio(unidade, rodizio.record.cycleNumber, rodizio.numero) : '';
@@ -64,11 +66,18 @@ export default function PaginaRelatorio() {
               Editar
             </Link>
             <button
-              onClick={() => window.print()}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-acai-900 px-4 py-2 text-sm font-semibold text-white hover:bg-acai-800 cursor-pointer"
+              disabled={preparando}
+              onClick={async () => {
+                // As fotos do anexo precisam estar carregadas, senão saem em branco no PDF.
+                setPreparando(true);
+                await aguardarFotosDoAnexo();
+                setPreparando(false);
+                window.print();
+              }}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-acai-900 px-4 py-2 text-sm font-semibold text-white hover:bg-acai-800 disabled:opacity-70 cursor-pointer"
             >
-              <Printer className="h-4 w-4" />
-              Imprimir ou salvar PDF
+              {preparando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+              {preparando ? 'Carregando fotos…' : 'Imprimir ou salvar PDF'}
             </button>
           </div>
         )}
@@ -82,7 +91,9 @@ export default function PaginaRelatorio() {
               informe a data da assinatura em Editar.
             </p>
           )}
-          <FolhaRelatorio unidade={unidade} rodizio={rodizio} relatorio={relatorio} codigo={codigo} />
+          <FolhaRelatorio unidade={unidade} rodizio={rodizio} relatorio={relatorio} codigo={codigo} fotosEnviadas={fotos.get(recordId)} />
+          <AnexoFotografico rodizio={rodizio} codigo={codigo} />
+          <GaleriaFotos rodizio={rodizio} />
         </>
       ) : rodizio.record.status === 'scheduled' ? (
         <div className="rounded-[28px] bg-white px-7 py-10 ring-1 ring-folha-100">

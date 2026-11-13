@@ -24,11 +24,12 @@ app/
     page.tsx                 painel: sensor em campo, indicadores e planta baixa
     historico/               tabela de registros
     relatorios/              lista, folha A4 e formulário do relatório de campo
-  api/                       rotas do servidor (login, registros, rodízios, relatórios, fotos, equipe)
+  api/                       rotas do servidor (login, registros, rodízios, relatórios, fotos, Drive, equipe)
+  privacidade/               política de privacidade (pública, exigida pelo Google)
 components/
   app/                       sessão, painel da unidade e cabeçalho
   graficos/                  indicadores do ciclo
-  relatorio/                 folha e formulário do relatório
+  relatorio/                 folha, formulário e fotos do relatório
   vivo/                      peças visuais compartilhadas (janela, abas, avatar, animações)
 lib/
   server/                    acesso ao MySQL (só no servidor)
@@ -43,9 +44,16 @@ scripts/verify-all-3x.mjs    verificação rápida (npm run verificar, com o ser
 1. No painel da unidade (Breves ou Muaná), toque em **Registrar rodízio**.
 2. Confira a data da troca: a posição em campo é concluída nessa data, a posição já sorteada passa a ativa e a próxima troca fica para +14 dias.
 3. Deixe marcado **Já sortear a próxima posição**: ela fica agendada para a próxima troca.
-4. O relatório de campo da nova posição abre em seguida, já com a origem preenchida. Preencha, salve em PDF e assine no gov.br.
+4. O relatório de campo da nova posição abre em seguida, já com a origem preenchida. Preencha, envie as fotos no passo **Fotos e conclusão**, salve em PDF e assine no gov.br.
 
 Também é possível sortear a próxima posição antes do dia da troca (**Sortear próxima posição**).
+
+## 📷 Fotos dos relatórios
+
+- Os originais ficam no **Google Drive** da conta do projeto, na pasta "MonitorAçaí — Fotos dos relatórios" (uma subpasta por relatório, ex.: `Relatório_Breves_C1R1`), compartilhada com abner.lucas@ifpa.edu.br.
+- O navegador envia cada foto **direto ao Drive** (sem passar pela hospedagem); o site mostra só versões reduzidas geradas pelo Drive, e o botão "Baixar original" traz o arquivo completo.
+- O PDF do relatório ganha uma página final, o **anexo fotográfico**, com as fotos em 2000 px.
+- Configuração: `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` (projeto "MonitorAcai" no Google Cloud, conta abnerlucas.cad@gmail.com) e, uma vez, **Equipe → Fotos → Conectar Google Drive** com o coordenador.
 
 ## 🗄️ Banco de dados
 
@@ -57,6 +65,7 @@ As tabelas são criadas automaticamente na primeira requisição (`lib/server/db
 | `rotation_reports` | Relatório de campo de cada rodízio (campos do formulário em JSON) |
 | `app_settings` | Configurações do app (ciclo atual de Breves em `current_cycle`, de Muaná em `current_cycle:muana`) |
 | `authorized_users` | Pesquisadores autorizados e coordenador (senha guardada só como hash) |
+| `report_photos` | Fotos de cada relatório (1 a 8): só a referência ao arquivo no Google Drive |
 
 ---
 
@@ -86,4 +95,4 @@ O site é um app Node.js na Hostinger, conectado a este repositório do GitHub: 
 Configuração do app (hPanel → Sites → `monitoracai.profabnerlucas.com` → Node.js):
 
 - **Framework:** Next.js · **Node:** 22 · **Build:** `npm run build` · **Saída:** `.next`
-- **Variáveis de ambiente:** `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e `SESSION_SECRET`. No servidor o banco é acessado por `127.0.0.1`, nunca pelo host remoto.
+- **Variáveis de ambiente:** `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `SESSION_SECRET`, `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`. No servidor o banco é acessado por `127.0.0.1`, nunca pelo host remoto.
