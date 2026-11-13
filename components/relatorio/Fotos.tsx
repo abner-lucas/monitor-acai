@@ -112,8 +112,9 @@ function CartaoEnvio({
   const { progresso, removendo, erro } = estado;
   const ocupado = progresso !== null || !!removendo;
 
+  // Cartões da mesma linha com a mesma altura: o texto ocupa o meio e os botões ficam no rodapé.
   return (
-    <li className="min-w-0">
+    <li className="flex min-w-0">
       <div
         onDragOver={(e) => {
           if (desabilitado) return;
@@ -127,7 +128,7 @@ function CartaoEnvio({
           const arquivo = e.dataTransfer.files[0];
           if (!desabilitado && !ocupado && arquivo) onEscolher(arquivo);
         }}
-        className={`overflow-hidden rounded-2xl ring-1 transition-colors ${
+        className={`flex w-full flex-col overflow-hidden rounded-2xl ring-1 transition-colors ${
           arrastando ? 'bg-broto-100/70 ring-2 ring-folha-600' : foto ? 'bg-white ring-folha-600/30' : 'bg-papel/50 ring-transparent'
         }`}
       >
@@ -163,7 +164,7 @@ function CartaoEnvio({
           )}
         </div>
 
-        <div className="p-3.5">
+        <div className="flex flex-1 flex-col p-3.5">
           <p className="text-sm font-semibold text-grafite">{info.titulo}</p>
           <p className="mt-0.5 text-xs text-slate-600">{info.texto}</p>
           {foto && (
@@ -178,7 +179,7 @@ function CartaoEnvio({
             </p>
           )}
           {foto && (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-auto flex flex-wrap gap-2 pt-3">
               <button
                 type="button"
                 disabled={desabilitado || ocupado}
