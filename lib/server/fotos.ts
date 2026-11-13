@@ -79,9 +79,6 @@ async function contexto(recordId: string, numero: number) {
   const unidade = UNIDADES[record.site ?? 'breves'];
   const rodizio = rodizioDoRegistro(await listRecords(unidade.id), recordId);
   if (!rodizio) throw new ValidationError('Rodízio não encontrado.');
-  if (!rodizio.origem && FOTOS_RELATORIO[numero - 1].bloco === 'anterior') {
-    throw new ValidationError('Primeira instalação do ciclo: as fotos da posição antiga não se aplicam.');
-  }
   const codigo = codigoRelatorio(unidade, record.cycleNumber, rodizio.numero);
   return { record, unidade, codigo };
 }

@@ -81,8 +81,9 @@ export default function PaginaRelatorios() {
             const pendente = !relatorio;
             const codigo = codigoRelatorio(unidade, ciclo, numero);
             const ultimo = i === rodizios.length - 1;
-            const totalFotos = fotosAplicaveis(rodizio).length;
-            const enviadas = fotos.get(record.id)?.size ?? 0;
+            const doRelatorio = fotos.get(record.id);
+            const totalFotos = fotosAplicaveis(rodizio, doRelatorio).length;
+            const enviadas = doRelatorio?.size ?? 0;
             return (
               <motion.li
                 key={record.id}

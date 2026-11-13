@@ -317,16 +317,20 @@ export function FolhaRelatorio({
           Fotos tiradas na luz do dia, em alta resolução e com o nome no padrão DATA_UNIDADE_C1R1_FOTO01.jpg.
         </p>
         {(['anterior', 'posterior'] as const).map((bloco) => {
-          const fotos = FOTOS_RELATORIO.filter((f) => f.bloco === bloco);
-          const posicao = bloco === 'anterior' ? origem?.positionId : record.positionId;
+          // Na 1ª instalação o bloco "anterior" só lista as fotos da área que foram de fato enviadas.
+          const antesDaPrimeira = bloco === 'anterior' && primeira;
+          const fotos = FOTOS_RELATORIO.filter((f) => f.bloco === bloco && (!antesDaPrimeira || fotosEnviadas?.has(f.numero)));
+          const posicao = bloco === 'anterior' ? origem?.positionId ?? record.positionId : record.positionId;
           return (
             <div key={bloco} className="mt-3 break-inside-avoid">
               <h3 className="font-semibold">
-                {bloco === 'anterior'
-                  ? 'Bloco 1: situação anterior (antes da desinstalação na célula de origem)'
-                  : 'Bloco 2: situação posterior (instalação concluída na célula de destino)'}
+                {antesDaPrimeira
+                  ? 'Bloco 1: situação anterior (área antes da primeira instalação)'
+                  : bloco === 'anterior'
+                    ? 'Bloco 1: situação anterior (antes da desinstalação na célula de origem)'
+                    : 'Bloco 2: situação posterior (instalação concluída na célula de destino)'}
               </h3>
-              {bloco === 'anterior' && primeira ? (
+              {antesDaPrimeira && fotos.length === 0 ? (
                 <p className="mt-1 italic text-slate-600">Não se aplica: primeira instalação do ciclo.</p>
               ) : (
                 <ul className="mt-1.5 space-y-1.5">

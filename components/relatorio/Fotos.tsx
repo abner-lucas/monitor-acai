@@ -14,15 +14,24 @@ import { fotoService, urlFoto, type EstadoDrive } from '@/lib/services/fotoServi
 
 type Foto = (typeof FOTOS_RELATORIO)[number];
 
-/** Fotos que se aplicam a este rodízio: na primeira instalação do ciclo não há posição antiga. */
-export function fotosAplicaveis(rodizio: Rodizio): Foto[] {
-  return FOTOS_RELATORIO.filter((f) => f.bloco === 'posterior' || rodizio.origem);
+/**
+ * Fotos que contam neste rodízio. Na primeira instalação do ciclo não há posição antiga:
+ * as fotos "Antes" são opcionais (a área antes de instalar) e só contam se foram enviadas.
+ */
+export function fotosAplicaveis(rodizio: Rodizio, enviadas?: Map<number, FotoRelatorio>): Foto[] {
+  return FOTOS_RELATORIO.filter((f) => f.bloco === 'posterior' || rodizio.origem || enviadas?.has(f.numero));
 }
 
 const BLOCOS = {
   anterior: { titulo: 'Antes', texto: 'Na célula de origem, antes da desinstalação' },
   posterior: { titulo: 'Depois', texto: 'Na célula de destino, instalação concluída' },
 } as const;
+
+/** Texto do bloco "Antes" na primeira instalação, quando ele é opcional. */
+const ANTES_PRIMEIRA = 'Área antes da primeira instalação (opcional)';
+
+const textoBloco = (bloco: 'anterior' | 'posterior', rodizio: Rodizio) =>
+  bloco === 'anterior' && !rodizio.origem ? ANTES_PRIMEIRA : BLOCOS[bloco].texto;
 
 const megas = (bytes: number) =>
   bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -237,7 +246,7 @@ export function EnvioFotos({ rodizio }: { rodizio: Rodizio }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const recordId = rodizio.record.id;
   const doRelatorio = fotos.get(recordId);
-  const aplicaveis = fotosAplicaveis(rodizio);
+  const aplicaveis = FOTOS_RELATORIO;
   const semDrive = drive !== null && !drive.conectado;
   const enviando = Object.values(estados).some((e) => e.progresso !== null || e.removendo);
 
@@ -328,7 +337,7 @@ export function EnvioFotos({ rodizio }: { rodizio: Rodizio }) {
         return (
           <section key={bloco} className="mt-5 first:mt-0">
             <h4 className="text-sm font-semibold text-grafite">
-              {BLOCOS[bloco].titulo} <span className="font-normal text-slate-600">· {BLOCOS[bloco].texto}</span>
+              {BLOCOS[bloco].titulo} <span className="font-normal text-slate-600">· {textoBloco(bloco, rodizio)}</span>
             </h4>
             <ul className="mt-2.5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {lista.map((info) => (
@@ -478,7 +487,7 @@ function Visualizador({ lista, inicio, onFechar }: { lista: FotoRelatorio[]; ini
 export function GaleriaFotos({ rodizio }: { rodizio: Rodizio }) {
   const { fotos } = useUnidade();
   const doRelatorio = fotos.get(rodizio.record.id);
-  const aplicaveis = fotosAplicaveis(rodizio);
+  const aplicaveis = fotosAplicaveis(rodizio, doRelatorio);
   const lista = aplicaveis.map((f) => doRelatorio?.get(f.numero)).filter((f): f is FotoRelatorio => !!f);
   const [aberta, setAberta] = useState<number | null>(null);
 
@@ -502,7 +511,7 @@ export function GaleriaFotos({ rodizio }: { rodizio: Rodizio }) {
           return (
             <div key={bloco} className="mt-5">
               <h3 className="text-sm font-semibold text-grafite">
-                {BLOCOS[bloco].titulo} <span className="font-normal text-slate-600">· {BLOCOS[bloco].texto}</span>
+                {BLOCOS[bloco].titulo} <span className="font-normal text-slate-600">· {textoBloco(bloco, rodizio)}</span>
               </h3>
               <ul className="mt-2.5 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
                 {doBloco.map((info) => {
@@ -560,7 +569,7 @@ export function GaleriaFotos({ rodizio }: { rodizio: Rodizio }) {
 export function AnexoFotografico({ rodizio, codigo }: { rodizio: Rodizio; codigo: string }) {
   const { fotos } = useUnidade();
   const doRelatorio = fotos.get(rodizio.record.id);
-  const lista = fotosAplicaveis(rodizio)
+  const lista = fotosAplicaveis(rodizio, doRelatorio)
     .map((info) => ({ info, foto: doRelatorio?.get(info.numero) }))
     .filter((x): x is { info: Foto; foto: FotoRelatorio } => !!x.foto);
   if (lista.length === 0) return null;
