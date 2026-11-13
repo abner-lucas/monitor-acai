@@ -317,7 +317,6 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                   <ArrowUpDown className="w-3 h-3 text-folha-600" />
                 </div>
               </th>
-              <th className="py-3 px-3">Ciclo</th>
               <th
                 onClick={() => toggleSort('cellId')}
                 className="py-3 px-3 cursor-pointer hover:bg-folha-100/60 transition-colors"
@@ -346,7 +345,7 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
           <tbody className="divide-y divide-folha-100/70">
             {filteredRecords.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-10 text-center text-slate-500">
+                <td colSpan={8} className="py-10 text-center text-slate-500">
                   Nenhum registro encontrado para os filtros selecionados.
                 </td>
               </tr>
@@ -362,15 +361,9 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                     }`}
                   >
                     {/* ID */}
-                    <td className="py-3 px-3 font-semibold text-grafite whitespace-nowrap tabular-nums">
-                      {record.id}
-                    </td>
-
-                    {/* Ciclo */}
-                    <td className="py-3.5 px-3 whitespace-nowrap">
-                      <span className="text-slate-700 tabular-nums">
-                        Ciclo {record.cycleNumber}
-                      </span>
+                    <td className="py-3 px-3 whitespace-nowrap tabular-nums">
+                      <span className="block font-semibold text-grafite">{record.id}</span>
+                      <span className="block text-xs text-slate-600">Ciclo {record.cycleNumber}</span>
                     </td>
 
                     {/* Location */}

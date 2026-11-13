@@ -53,13 +53,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="grao sticky top-0 z-40 print:hidden bg-acai-950/95 backdrop-blur text-acai-100 border-b border-white/5">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="max-w-[1440px] mx-auto px-2 min-[360px]:px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-2 h-16">
           {/* Brand & Project Info */}
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <MarcaAcai className="h-8 w-7 shrink-0 sm:h-9 sm:w-8" />
-            <div className="flex items-center gap-2.5">
-              <span className="font-display text-lg sm:text-xl font-semibold tracking-tight text-white">MonitorAçaí</span>
+            <div className="flex min-w-0 items-center gap-2.5">
+              {/* Em telas estreitas a marca fica só com o cacho: os botões da direita não cabem junto do nome. */}
+              <span className="hidden min-[450px]:inline truncate font-display text-lg sm:text-xl font-semibold tracking-tight text-white">MonitorAçaí</span>
               <span
                 className="hidden sm:inline-flex items-center whitespace-nowrap rounded-md border border-dashed border-broto-400/60 px-2 py-0.5 text-xs font-semibold text-broto-400 tabular-nums"
                 title={`Ciclo de amostragem em andamento em ${unidade.nome}`}
@@ -70,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-0.5 sm:gap-2">
+          <div className="flex shrink-0 items-center min-[360px]:gap-0.5 sm:gap-2">
             {/* Superuser Manage Team Button */}
             {isSuperuser && onOpenManageUsers && (
               <button
