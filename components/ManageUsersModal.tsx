@@ -238,7 +238,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
               return (
                 <li
                   key={u.id || u.email}
-                  className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl p-3.5 ${isSuper ? 'bg-acai-100/60' : 'bg-papel/60'}`}
+                  className={`grid grid-cols-1 items-center gap-3 rounded-2xl p-3.5 sm:grid-cols-[minmax(0,1fr)_auto] ${isSuper ? 'bg-acai-100/60' : 'bg-papel/60'}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <Avatar nome={u.fullName || u.email} url={u.avatarUrl} destaque={isSuper} tamanho="md" />
@@ -266,16 +266,16 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                     </div>
                   </div>
                   {protegido ? (
-                    <span className="shrink-0 text-xs text-slate-500">{u.id === usuario.id ? 'Você' : 'Coordenador'}</span>
+                    <span className="text-xs text-slate-500 sm:justify-self-end">{u.id === usuario.id ? 'Você' : 'Coordenador'}</span>
                   ) : (
-                    <div className="flex shrink-0 items-center gap-1">
+                    <div className="flex items-center gap-1 sm:justify-self-end">
                     {travado && <Loader2 className="mr-1 h-4 w-4 animate-spin text-folha-600" aria-label="Salvando" />}
                     <select
                       aria-label={`Nível de acesso de ${u.fullName}`}
                       value={u.role}
                       disabled={travado}
                       onChange={(e) => alterar(u, { role: e.target.value as Papel }, `${u.fullName}: ${PAPEIS[e.target.value as Papel].rotulo.toLowerCase()}`)}
-                      className="min-h-10 rounded-full bg-white px-3 text-sm text-grafite ring-1 ring-papel-linha outline-hidden focus:ring-2 focus:ring-folha-600 disabled:opacity-60"
+                      className="min-h-10 min-w-0 flex-1 rounded-full bg-white px-3 text-sm sm:w-52 sm:flex-none text-grafite ring-1 ring-papel-linha outline-hidden focus:ring-2 focus:ring-folha-600 disabled:opacity-60"
                     >
                       {PAPEIS_ORDEM.map((p) => (
                         <option key={p} value={p}>
