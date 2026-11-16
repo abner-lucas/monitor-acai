@@ -53,8 +53,19 @@ export default function PaginaEditarRelatorio() {
   const { registro } = useParams<{ registro: string }>();
   const recordId = decodeURIComponent(registro);
   const router = useRouter();
-  const { unidade, records, relatorios, salvarRelatorio, hrefRelatorio } = useUnidade();
+  const { unidade, records, relatorios, salvarRelatorio, hrefRelatorio, podeEditar } = useUnidade();
   const rodizio = rodizioDoRegistro(records, recordId);
+
+  if (!podeEditar) {
+    return (
+      <div className="rounded-[28px] bg-white p-7 ring-1 ring-folha-100">
+        <p className="text-sm text-slate-700">Seu acesso é só de visualização: o relatório pode ser lido e baixado, mas não editado.</p>
+        <Link href={hrefRelatorio(recordId)} className="mt-3 inline-block text-sm font-medium text-folha-700 hover:underline">
+          Ver o relatório
+        </Link>
+      </div>
+    );
+  }
 
   if (!rodizio) {
     return (

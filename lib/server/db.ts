@@ -1,4 +1,4 @@
-import mysql, { type Pool, type ResultSetHeader } from 'mysql2/promise';
+import mysql, { type Pool, type ResultSetHeader, type RowDataPacket } from 'mysql2/promise';
 
 /**
  * Conexão com o banco MySQL da Hostinger (somente servidor).
@@ -54,7 +54,7 @@ const SCHEMA_STATEMENTS = [
     created_at DATETIME(3) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_authorized_users_email (email),
-    CONSTRAINT chk_authorized_users_role CHECK (role IN ('superuser', 'pesquisador'))
+    CONSTRAINT chk_authorized_users_papel CHECK (role IN ('superuser', 'pesquisador', 'visualizador'))
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
   `INSERT IGNORE INTO app_settings (setting_key, setting_value) VALUES ('current_cycle', '1')`,
   // Bancos criados antes da separação por unidade: todos os registros antigos são de Breves.
@@ -63,6 +63,11 @@ const SCHEMA_STATEMENTS = [
   // Foto do usuário (data URL já reduzida no navegador) e quando foi trocada.
   `ALTER TABLE authorized_users ADD COLUMN IF NOT EXISTS avatar MEDIUMTEXT NULL`,
   `ALTER TABLE authorized_users ADD COLUMN IF NOT EXISTS avatar_updated_at DATETIME(3) NULL`,
+  // Senha provisória (criada ou redefinida pelo administrador): o usuário troca no primeiro acesso.
+  `ALTER TABLE authorized_users ADD COLUMN IF NOT EXISTS must_change_password TINYINT(1) NOT NULL DEFAULT 0`,
+  `ALTER TABLE authorized_users ADD COLUMN IF NOT EXISTS password_changed_at DATETIME(3) NULL`,
+  // Sobe a cada troca de senha: derruba as sessões abertas com a senha antiga.
+  `ALTER TABLE authorized_users ADD COLUMN IF NOT EXISTS session_version INT NOT NULL DEFAULT 0`,
   // Relatório de campo de cada rodízio; os campos do formulário ficam em JSON (lib/relatorio.ts).
   `CREATE TABLE IF NOT EXISTS rotation_reports (
     record_id VARCHAR(40) NOT NULL,
@@ -173,10 +178,31 @@ function createPool(): Pool {
   });
 }
 
+/**
+ * Terceiro nível de acesso (visualizador): troca a regra antiga do banco, que só aceitava dois.
+ * Roda à parte e sem derrubar o app se o servidor recusar a sintaxe (o app também valida o nível).
+ */
+async function ajustarRegraDePapeis(pool: Pool): Promise<void> {
+  const [regra] = await pool.query<RowDataPacket[]>(
+    `SELECT CHECK_CLAUSE FROM information_schema.CHECK_CONSTRAINTS
+     WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'authorized_users' AND CONSTRAINT_NAME LIKE 'chk_authorized_users_%'`
+  );
+  if (regra.some((r) => String(r.CHECK_CLAUSE).includes('visualizador'))) return;
+  try {
+    await pool.query('ALTER TABLE authorized_users DROP CONSTRAINT IF EXISTS chk_authorized_users_role');
+    await pool.query(
+      "ALTER TABLE authorized_users ADD CONSTRAINT chk_authorized_users_papel CHECK (role IN ('superuser', 'pesquisador', 'visualizador'))"
+    );
+  } catch (err) {
+    console.error('[db] não foi possível atualizar a regra de níveis de acesso', err);
+  }
+}
+
 async function ensureSchema(pool: Pool): Promise<void> {
   for (const statement of SCHEMA_STATEMENTS) {
     await pool.query(statement);
   }
+  await ajustarRegraDePapeis(pool).catch((err) => console.error('[db] regra de níveis de acesso', err));
   await copiarBrevesParaMuana(pool);
 }
 

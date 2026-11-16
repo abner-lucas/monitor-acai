@@ -2,11 +2,14 @@
 
 import React, { useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Camera, Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
+import { Camera, Check, ImagePlus, KeyRound, Loader2, Trash2, UserRound } from 'lucide-react';
 import { AuthUser } from '@/lib/types';
 import { authService } from '@/lib/services/authService';
 import { Janela, estilos } from '@/components/vivo/Janela';
 import { Avatar } from '@/components/vivo/Avatar';
+import { AbasDeslizantes } from '@/components/vivo/AbasDeslizantes';
+import { FormularioSenha } from '@/components/TrocarSenha';
+import { PAPEIS } from '@/lib/papeis';
 
 const LADO = 320; // px da foto salva (quadrada); fica nítida até no tamanho grande da tela
 const TIPOS_ACEITOS = ['image/jpeg', 'image/png', 'image/webp'];
@@ -52,6 +55,7 @@ function Conteudo({ onClose, usuario, onAviso }: Omit<Parameters<typeof PerfilMo
   const [arrastando, setArrastando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [aba, setAba] = useState<'foto' | 'senha'>('foto');
 
   const nome = usuario.fullName || usuario.email;
   const coordenador = usuario.role === 'superuser';
@@ -90,13 +94,14 @@ function Conteudo({ onClose, usuario, onAviso }: Omit<Parameters<typeof PerfilMo
 
   return (
     <Janela
-      titulo="Minha foto"
-      subtitulo="Aparece no menu e na lista da equipe."
-      icone={<Camera className="h-5 w-5" />}
+      titulo="Minha conta"
+      subtitulo={`${usuario.email} · ${PAPEIS[usuario.role ?? 'visualizador'].rotulo}`}
+      icone={<UserRound className="h-5 w-5" />}
       onFechar={onClose}
       bloquearFechar={salvando}
       largura="max-w-md"
       rodape={
+        aba === 'foto' && (
         <>
           {usuario.avatarUrl && !previa && (
             <button
@@ -117,8 +122,36 @@ function Conteudo({ onClose, usuario, onAviso }: Omit<Parameters<typeof PerfilMo
             Salvar foto
           </button>
         </>
+        )
       }
     >
+      <div className="mb-5">
+        <AbasDeslizantes
+          grupo="conta"
+          rotuloGrupo="Minha conta"
+          abas={[
+            { id: 'foto', rotulo: 'Foto', icone: Camera },
+            { id: 'senha', rotulo: 'Senha', icone: KeyRound },
+          ]}
+          ativa={aba}
+          onMudar={setAba}
+        />
+      </div>
+
+      {aba === 'senha' && (
+        <div>
+          <p className="mb-4 text-sm text-slate-600">Ao trocar a senha, as outras sessões abertas (em outros aparelhos) são encerradas.</p>
+          <FormularioSenha
+            email={usuario.email}
+            onTrocada={() => {
+              onAviso('success', 'Senha alterada', 'Use a nova senha no próximo acesso.');
+              onClose();
+            }}
+          />
+        </div>
+      )}
+
+      {aba === 'foto' && (
       <div className="flex flex-col items-center text-center">
         {/* Foto atual ou prévia, com o anel girando de leve enquanto há uma prévia por salvar */}
         <div className="relative">
@@ -182,6 +215,7 @@ function Conteudo({ onClose, usuario, onAviso }: Omit<Parameters<typeof PerfilMo
           </p>
         )}
       </div>
+      )}
     </Janela>
   );
 }

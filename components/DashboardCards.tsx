@@ -24,10 +24,11 @@ interface DashboardCardsProps {
   availablePositions: PositionInfo[];
   /** Posição já sorteada para a próxima troca. */
   scheduledRecord: RotationRecord | null;
-  onRegistrar: () => void;
-  onAgendar: () => void;
+  /** Ausentes para quem só visualiza: os botões de sorteio e registro somem. */
+  onRegistrar?: () => void;
+  onAgendar?: () => void;
   onSelectPosition: (positionId: number) => void;
-  onOpenCycleComplete: () => void;
+  onOpenCycleComplete?: () => void;
   /** Relatório de campo do rodízio em andamento, quando já preenchido. */
   relatorioAtivo?: Relatorio;
   codigoRelatorioAtivo?: string;
@@ -336,7 +337,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             </dl>
           </div>
 
-          {isCycleComplete && (
+          {isCycleComplete && onOpenCycleComplete && (
             <button
               onClick={onOpenCycleComplete}
               className="mt-4 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-full bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-200"
@@ -393,6 +394,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
             )}
           </div>
 
+          {onRegistrar && (
           <div className="flex flex-col gap-2 pt-4">
             {scheduledRecord || (!activeRecord && availablePositions.length > 0) ? (
               <button
@@ -431,6 +433,7 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
               </button>
             )}
           </div>
+          )}
         </motion.div>
       </div>
     </section>

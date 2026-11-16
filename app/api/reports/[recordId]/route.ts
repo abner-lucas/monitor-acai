@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { handleRouteError, jsonError, readJsonBody, requireUser } from '@/lib/server/http';
+import { handleRouteError, jsonError, readJsonBody, requireUser, requireEditor } from '@/lib/server/http';
 import { getReport, saveReport } from '@/lib/server/reports';
 
 type RouteContext = { params: Promise<{ recordId: string }> };
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
 export async function PUT(request: NextRequest, { params }: RouteContext) {
   try {
-    const guard = await requireUser(request);
+    const guard = await requireEditor(request);
     if (guard.response) return guard.response;
 
     const autor = guard.user.fullName || guard.user.email;

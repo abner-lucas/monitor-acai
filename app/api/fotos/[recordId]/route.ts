@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { confirmarEnvio, prepararEnvio } from '@/lib/server/fotos';
-import { handleRouteError, jsonError, origemPublica, readJsonBody, requireUser } from '@/lib/server/http';
+import { handleRouteError, jsonError, origemPublica, readJsonBody, requireEditor } from '@/lib/server/http';
 
 type RouteContext = { params: Promise<{ recordId: string }> };
 
@@ -11,7 +11,7 @@ type RouteContext = { params: Promise<{ recordId: string }> };
  */
 export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
-    const guard = await requireUser(request);
+    const guard = await requireEditor(request);
     if (guard.response) return guard.response;
 
     const recordId = (await params).recordId;

@@ -1,3 +1,4 @@
+import type { Papel } from './papeis';
 /** scheduled: posição já sorteada para a próxima troca, ainda sem sensor. */
 export type PositionStatus = 'active' | 'completed' | 'scheduled' | 'available';
 
@@ -49,18 +50,21 @@ export interface AuthUser {
   id: string;
   email: string;
   fullName?: string;
-  role?: string;
+  role?: Papel;
   /** Endereço da foto do usuário, ou null se não tiver foto. */
   avatarUrl?: string | null;
+  /** Entrou com senha provisória: precisa trocar antes de usar o sistema. */
+  trocarSenha?: boolean;
 }
 
 export interface AuthorizedUser {
   id: string;
   email: string;
   fullName: string;
-  role: 'superuser' | 'pesquisador';
-  password?: string;
+  role: Papel;
   isActive: boolean;
+  /** Ainda não trocou a senha provisória. */
+  trocarSenha?: boolean;
   createdAt: string;
   avatarUrl?: string | null;
 }

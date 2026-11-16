@@ -23,7 +23,8 @@ interface SafVisualMapProps {
   currentCycle: number;
   selectedPositionId: number | null;
   onSelectPosition: (positionId: number) => void;
-  onOpenRaffle: () => void;
+  /** Ausente para quem só visualiza. */
+  onOpenRaffle?: () => void;
   /** Nome da unidade piloto mostrado no texto do mapa. */
   local: string;
   /** Abre o relatório de campo do rodízio da planta selecionada. */
@@ -608,7 +609,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               )}
-              {selectedPositionStatus === 'available' && (
+              {selectedPositionStatus === 'available' && onOpenRaffle && (
                 <button
                   onClick={onOpenRaffle}
                   className="min-h-10 px-4 py-2 text-sm font-semibold bg-folha-700 hover:bg-folha-800 text-white rounded-full transition-colors flex items-center gap-1.5 active:scale-[0.97]"

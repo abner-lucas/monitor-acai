@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { miniatura, original } from '@/lib/server/drive';
 import { arquivoDaFoto, numeroFoto, removerFoto } from '@/lib/server/fotos';
-import { handleRouteError, jsonError, requireUser } from '@/lib/server/http';
+import { handleRouteError, jsonError, requireUser, requireEditor } from '@/lib/server/http';
 
 type RouteContext = { params: Promise<{ recordId: string; numero: string }> };
 
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
 export async function DELETE(request: NextRequest, { params }: RouteContext) {
   try {
-    const guard = await requireUser(request);
+    const guard = await requireEditor(request);
     if (guard.response) return guard.response;
     const { recordId, numero } = await params;
     return (await removerFoto(recordId, numeroFoto(numero)))

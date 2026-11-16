@@ -16,6 +16,7 @@ import { exportRecordsToCSV, exportRecordsToExcel } from '@/lib/storage';
 import type { Relatorio } from '@/lib/relatorio';
 import type { Unidade } from '@/lib/unidades';
 import { SUPERUSER_EMAIL } from '@/lib/services/authService';
+import { PAPEIS } from '@/lib/papeis';
 import { MarcaAcai } from '@/components/vivo/MarcaAcai';
 import { Avatar } from '@/components/vivo/Avatar';
 
@@ -24,7 +25,8 @@ interface NavbarProps {
   currentCycle: number;
   records: RotationRecord[];
   relatorios: Relatorio[];
-  onOpenManualCreate: () => void;
+  /** Ausente para quem só visualiza. */
+  onOpenManualCreate?: () => void;
   onOpenInfo: () => void;
   currentUser?: AuthUser | null;
   onSignOut?: () => void;
@@ -81,10 +83,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 title="Gerenciar pesquisadores autorizados no sistema"
               >
                 <Users className="w-4 h-4" />
-                <span className="hidden xl:inline">Pesquisadores</span>
+                <span className="hidden xl:inline">Equipe</span>
               </button>
             )}
 
+            {onOpenManualCreate && (
             <button
               id="btn-manual-record"
               onClick={onOpenManualCreate}
@@ -94,6 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <PlusCircle className="w-4 h-4" />
               <span className="hidden lg:inline whitespace-nowrap">Lançar manual</span>
             </button>
+            )}
 
             {/* Export Dropdown */}
             <div className="relative">
@@ -161,7 +165,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="hidden xl:flex flex-col text-right">
                   <div className="flex items-center justify-end gap-1">
                     {isSuperuser && (
-                      <span title="Superusuário Coordenador">
+                      <span title="Administrador">
                         <ShieldCheck className="w-3.5 h-3.5 text-broto-400" />
                       </span>
                     )}
@@ -169,8 +173,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {currentUser.fullName || currentUser.email.split('@')[0]}
                     </span>
                   </div>
-                  <span className="text-xs text-acai-300 leading-tight truncate max-w-[150px]">
-                    {currentUser.email}
+                  <span className="text-xs text-acai-300 leading-tight truncate max-w-[150px]" title={currentUser.email}>
+                    {PAPEIS[currentUser.role ?? 'visualizador'].rotulo}
                   </span>
                 </div>
 
@@ -178,8 +182,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   type="button"
                   onClick={onOpenPerfil}
                   className="inline-flex rounded-full transition-transform hover:scale-105 cursor-pointer"
-                  title="Minha foto"
-                  aria-label="Minha foto"
+                  title="Minha conta (foto e senha)"
+                  aria-label="Minha conta"
                 >
                   <Avatar nome={currentUser.fullName || currentUser.email} url={currentUser.avatarUrl} destaque={!!isSuperuser} />
                 </button>

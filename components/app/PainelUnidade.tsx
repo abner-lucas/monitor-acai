@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { RotationRecord, PositionInfo, CycleStats } from '@/lib/types';
 import { DadosRelatorio, FotoRelatorio, Relatorio, StatusRelatorio } from '@/lib/relatorio';
 import { UNIDADES, Unidade, UnidadeId } from '@/lib/unidades';
+import { podeEditar as papelPodeEditar } from '@/lib/papeis';
 import { computeCycleStats, getAvailablePositionsForCycle } from '@/lib/storage';
 import { rotationServiceDa, reportService, campoService } from '@/lib/services';
 import { fotoService } from '@/lib/services/fotoService';
@@ -35,6 +36,8 @@ type DadosRegistro = {
 
 interface ContextoUnidade {
   unidade: Unidade;
+  /** false para quem só visualiza: as páginas escondem os botões de lançar e alterar dados. */
+  podeEditar: boolean;
   records: RotationRecord[];
   relatorios: Map<string, Relatorio>;
   currentCycle: number;
@@ -170,10 +173,13 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
   const scheduledRecord = records.find((r) => r.cycleNumber === currentCycle && r.status === 'scheduled') || null;
   const activeRecord = records.find((r) => r.cycleNumber === currentCycle && r.status === 'active') || null;
 
+  const podeEditar = papelPodeEditar(usuario.role);
+
+  // Quem só visualiza sempre cai na página de leitura do relatório, nunca na de edição.
   const hrefRelatorio = useCallback(
     (recordId: string, editar = false) =>
-      `/${unidadeId}/relatorios/${encodeURIComponent(recordId)}${editar ? '/editar' : ''}`,
-    [unidadeId]
+      `/${unidadeId}/relatorios/${encodeURIComponent(recordId)}${editar && podeEditar ? '/editar' : ''}`,
+    [unidadeId, podeEditar]
   );
 
   const focarNoMapa = useCallback(
@@ -282,6 +288,7 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
 
   const contexto: ContextoUnidade = {
     unidade,
+    podeEditar,
     records,
     relatorios,
     currentCycle,
@@ -327,7 +334,7 @@ export function PainelUnidade({ unidadeId, children }: { unidadeId: UnidadeId; c
           currentCycle={currentCycle}
           records={records}
           relatorios={listaRelatorios}
-          onOpenManualCreate={contexto.abrirNovoRegistro}
+          onOpenManualCreate={podeEditar ? contexto.abrirNovoRegistro : undefined}
           onOpenInfo={() => setIsInfoOpen(true)}
           currentUser={usuario}
           onSignOut={sair}

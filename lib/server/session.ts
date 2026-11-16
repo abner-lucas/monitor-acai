@@ -23,14 +23,17 @@ export function sign(payload: string): string {
   return createHmac('sha256', getSecret()).update(payload).digest('base64url');
 }
 
-function createSessionToken(userId: string): string {
+function createSessionToken(userId: string, versao: number): string {
   const expiresAt = Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS;
-  const payload = Buffer.from(JSON.stringify({ uid: userId, exp: expiresAt })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ uid: userId, exp: expiresAt, v: versao })).toString('base64url');
   return `${payload}.${sign(payload)}`;
 }
 
-/** Retorna o id do usuário se o token for autêntico e não estiver expirado. */
-export function readSessionUserId(token: string | undefined): string | null {
+/**
+ * Id do usuário e versão da sessão, se o token for autêntico e não estiver expirado.
+ * A versão é comparada com a do banco: trocar a senha invalida as sessões antigas.
+ */
+export function readSessionUserId(token: string | undefined): { uid: string; versao: number } | null {
   if (!token) return null;
 
   const [payload, signature] = token.split('.');
@@ -43,11 +46,12 @@ export function readSessionUserId(token: string | undefined): string | null {
   }
 
   try {
-    const { uid, exp } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    const { uid, exp, v } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     if (typeof uid !== 'string' || typeof exp !== 'number' || exp < Date.now() / 1000) {
       return null;
     }
-    return uid;
+    // Sessões anteriores à versão não têm o campo: valem como versão 0.
+    return { uid, versao: typeof v === 'number' ? v : 0 };
   } catch {
     return null;
   }
@@ -60,8 +64,8 @@ const cookieOptions = {
   path: '/',
 };
 
-export function setSessionCookie(response: NextResponse, userId: string): void {
-  response.cookies.set(SESSION_COOKIE, createSessionToken(userId), {
+export function setSessionCookie(response: NextResponse, userId: string, versao: number): void {
+  response.cookies.set(SESSION_COOKIE, createSessionToken(userId, versao), {
     ...cookieOptions,
     maxAge: SESSION_MAX_AGE_SECONDS,
   });

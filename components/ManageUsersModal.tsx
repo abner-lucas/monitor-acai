@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Eye, EyeOff, HardDrive, KeyRound, Loader2, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
+import { CheckCircle2, Copy, Eye, EyeOff, HardDrive, KeyRound, Loader2, PauseCircle, PlayCircle, ShieldCheck, Trash2, UserPlus, Users } from 'lucide-react';
 import { authService, SUPERUSER_EMAIL } from '@/lib/services/authService';
 import { AuthorizedUser } from '@/lib/types';
 import { Janela, estilos } from '@/components/vivo/Janela';
 import { AbasDeslizantes } from '@/components/vivo/AbasDeslizantes';
 import { Avatar } from '@/components/vivo/Avatar';
 import { PainelDrive } from '@/components/PainelDrive';
+import { useSessao } from '@/components/app/Sessao';
+import { PAPEIS, PAPEIS_ORDEM, problemaSenha, type Papel } from '@/lib/papeis';
 
 interface ManageUsersModalProps {
   isOpen: boolean;
@@ -24,9 +26,43 @@ export const ManageUsersModal: React.FC<ManageUsersModalProps> = ({ isOpen, onCl
 /** Senha aleatória de 14 caracteres (letras, números e símbolos), gerada no navegador. */
 function gerarSenha(): string {
   const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%&*';
-  const sorteio = new Uint32Array(14);
-  crypto.getRandomValues(sorteio);
-  return Array.from(sorteio, (n) => caracteres[n % caracteres.length]).join('');
+  for (;;) {
+    const sorteio = new Uint32Array(14);
+    crypto.getRandomValues(sorteio);
+    const senha = Array.from(sorteio, (n) => caracteres[n % caracteres.length]).join('');
+    if (!problemaSenha(senha)) return senha;
+  }
+}
+
+/** Senha provisória acabada de criar: mostrada uma única vez para o administrador repassar. */
+function AvisoSenha({ nome, email, senha, onFechar }: { nome: string; email: string; senha: string; onFechar: () => void }) {
+  const [copiado, setCopiado] = useState(false);
+  const texto = `MonitorAçaí (https://monitoracai.profabnerlucas.com)\nEmail: ${email}\nSenha provisória: ${senha}\nNo primeiro acesso o sistema pede para criar uma senha sua.`;
+  return (
+    <div className="mb-4 rounded-2xl bg-broto-100/70 p-4 ring-1 ring-folha-600/25" role="status">
+      <p className="text-sm font-semibold text-grafite">Senha provisória de {nome}</p>
+      <p className="mt-1 break-all font-mono text-base text-grafite">{senha}</p>
+      <p className="mt-1 text-xs text-slate-700">
+        Ela aparece só agora. Envie por um canal seguro; no primeiro acesso a pessoa cria a própria senha.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={async () => {
+            await navigator.clipboard.writeText(texto).catch(() => undefined);
+            setCopiado(true);
+          }}
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-acai-900 px-3.5 text-xs font-semibold text-white hover:bg-acai-800 cursor-pointer"
+        >
+          {copiado ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copiado ? 'Copiado' : 'Copiar mensagem de acesso'}
+        </button>
+        <button type="button" onClick={onFechar} className={estilos.botaoSecundario}>
+          Pronto
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'>) {
@@ -39,6 +75,10 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newRole, setNewRole] = useState<Papel>('visualizador');
+  const [senhaGerada, setSenhaGerada] = useState<{ nome: string; email: string; senha: string } | null>(null);
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  const { usuario } = useSessao();
 
   const loadUsers = useCallback(async () => {
     try {
@@ -68,8 +108,9 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
       onShowToast('error', 'Preenchimento incompleto', 'Informe o nome e o email do pesquisador.');
       return;
     }
-    if (newPassword.length < 6) {
-      onShowToast('error', 'Senha curta', 'A senha deve conter no mínimo 6 caracteres.');
+    const problema = problemaSenha(newPassword, newEmail.trim().toLowerCase());
+    if (problema) {
+      onShowToast('error', 'Senha provisória fraca', problema);
       return;
     }
 
@@ -79,12 +120,14 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
         fullName: newName.trim(),
         email: newEmail.trim(),
         password: newPassword,
-        role: 'pesquisador',
+        role: newRole,
       });
       if (!res.success) {
         onShowToast('error', 'Falha ao autorizar', res.error || 'Erro desconhecido.');
       } else {
-        onShowToast('success', 'Pesquisador autorizado', `${newName} (${newEmail}) foi cadastrado.`);
+        onShowToast('success', 'Acesso criado', `${newName} entra como ${PAPEIS[newRole].rotulo.toLowerCase()}.`);
+        setSenhaGerada({ nome: newName.trim(), email: newEmail.trim().toLowerCase(), senha: newPassword });
+        setNewRole('visualizador');
         setNewName('');
         setNewEmail('');
         setNewPassword('');
@@ -97,6 +140,27 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const alterar = async (u: AuthorizedUser, mudancas: { role?: Papel; ativo?: boolean; novaSenha?: string }, sucesso: string) => {
+    setOcupado(u.email);
+    try {
+      const atualizado = await authService.atualizarUsuario(u.email, mudancas);
+      setUsers((lista) => lista.map((x) => (x.email === u.email ? atualizado : x)));
+      onShowToast('success', sucesso);
+      return true;
+    } catch (err) {
+      onShowToast('error', 'Não foi possível alterar', err instanceof Error ? err.message : undefined);
+      return false;
+    } finally {
+      setOcupado(null);
+    }
+  };
+
+  const redefinirSenha = async (u: AuthorizedUser) => {
+    if (!confirm(`Gerar uma nova senha provisória para ${u.fullName}? A senha atual deixa de funcionar e a pessoa sai de todas as sessões.`)) return;
+    const senha = gerarSenha();
+    if (await alterar(u, { novaSenha: senha }, 'Senha redefinida')) setSenhaGerada({ nome: u.fullName, email: u.email, senha });
   };
 
   const handleRemoveUser = async (email: string, name: string) => {
@@ -116,8 +180,8 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
 
   return (
     <Janela
-      titulo="Pesquisadores autorizados"
-      subtitulo="Quem pode entrar no MonitorAçaí. Só o coordenador gerencia esta lista."
+      titulo="Equipe e acessos"
+      subtitulo="Quem pode entrar no MonitorAçaí e o que cada pessoa pode fazer."
       icone={<Users className="h-5 w-5" />}
       onFechar={onClose}
       bloquearFechar={isSubmitting}
@@ -130,7 +194,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
             </button>
             <button type="submit" form="form-pesquisador" disabled={isSubmitting} className={estilos.botaoPrincipal}>
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              Autorizar pesquisador
+              Criar acesso
             </button>
           </>
         ) : (
@@ -146,13 +210,15 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
           rotuloGrupo="Equipe"
           abas={[
             { id: 'users', rotulo: `Equipe (${users.length})`, icone: Users },
-            { id: 'add', rotulo: 'Autorizar novo', icone: UserPlus },
+            { id: 'add', rotulo: 'Novo acesso', icone: UserPlus },
             { id: 'drive', rotulo: 'Fotos', icone: HardDrive },
           ]}
           ativa={activeTab}
           onMudar={setActiveTab}
         />
       </div>
+
+      {senhaGerada && activeTab !== 'drive' && <AvisoSenha {...senhaGerada} onFechar={() => setSenhaGerada(null)} />}
 
       {activeTab === 'users' &&
         (isLoading ? (
@@ -165,11 +231,14 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
         ) : (
           <ul className="space-y-2">
             {users.map((u) => {
-              const isSuper = u.role === 'superuser' || u.email.toLowerCase() === SUPERUSER_EMAIL.toLowerCase();
+              const isSuper = u.role === 'superuser';
+              // O coordenador do projeto e o próprio administrador logado não perdem o acesso por aqui.
+              const protegido = u.email.toLowerCase() === SUPERUSER_EMAIL.toLowerCase() || u.id === usuario.id;
+              const travado = ocupado === u.email;
               return (
                 <li
                   key={u.id || u.email}
-                  className={`flex items-center justify-between gap-3 rounded-2xl p-3.5 ${isSuper ? 'bg-acai-100/60' : 'bg-papel/60'}`}
+                  className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl p-3.5 ${isSuper ? 'bg-acai-100/60' : 'bg-papel/60'}`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <Avatar nome={u.fullName || u.email} url={u.avatarUrl} destaque={isSuper} tamanho="md" />
@@ -179,12 +248,15 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                         {isSuper ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-acai-900 px-2 py-0.5 text-xs font-semibold text-white">
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            Coordenador
+                            {PAPEIS.superuser.rotulo}
                           </span>
                         ) : (
                           <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-folha-800 ring-1 ring-folha-100">
-                            Pesquisador
+                            {PAPEIS[u.role].rotulo}
                           </span>
+                        )}
+                        {u.trocarSenha && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Senha provisória</span>
                         )}
                         {!u.isActive && (
                           <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700">Suspenso</span>
@@ -193,11 +265,47 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                       <p className="mt-0.5 truncate text-sm text-slate-600">{u.email}</p>
                     </div>
                   </div>
-                  {isSuper ? (
-                    <span className="shrink-0 text-xs text-slate-500">Não removível</span>
+                  {protegido ? (
+                    <span className="shrink-0 text-xs text-slate-500">{u.id === usuario.id ? 'Você' : 'Coordenador'}</span>
                   ) : (
+                    <div className="flex shrink-0 items-center gap-1">
+                    {travado && <Loader2 className="mr-1 h-4 w-4 animate-spin text-folha-600" aria-label="Salvando" />}
+                    <select
+                      aria-label={`Nível de acesso de ${u.fullName}`}
+                      value={u.role}
+                      disabled={travado}
+                      onChange={(e) => alterar(u, { role: e.target.value as Papel }, `${u.fullName}: ${PAPEIS[e.target.value as Papel].rotulo.toLowerCase()}`)}
+                      className="min-h-10 max-w-[11rem] rounded-full bg-white px-3 text-sm text-grafite ring-1 ring-papel-linha outline-hidden focus:ring-2 focus:ring-folha-600 disabled:opacity-60"
+                    >
+                      {PAPEIS_ORDEM.map((p) => (
+                        <option key={p} value={p}>
+                          {PAPEIS[p].rotulo}
+                        </option>
+                      ))}
+                    </select>
                     <button
                       type="button"
+                      disabled={travado}
+                      onClick={() => redefinirSenha(u)}
+                      title={`Nova senha provisória para ${u.fullName}`}
+                      aria-label={`Nova senha provisória para ${u.fullName}`}
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-white hover:text-grafite disabled:opacity-50 cursor-pointer"
+                    >
+                      <KeyRound className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={travado}
+                      onClick={() => alterar(u, { ativo: !u.isActive }, u.isActive ? `${u.fullName} suspenso` : `${u.fullName} reativado`)}
+                      title={u.isActive ? `Suspender ${u.fullName}` : `Reativar ${u.fullName}`}
+                      aria-label={u.isActive ? `Suspender ${u.fullName}` : `Reativar ${u.fullName}`}
+                      className="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-white hover:text-grafite disabled:opacity-50 cursor-pointer"
+                    >
+                      {u.isActive ? <PauseCircle className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={travado}
                       onClick={() => handleRemoveUser(u.email, u.fullName)}
                       title={`Revogar acesso de ${u.fullName}`}
                       aria-label={`Revogar acesso de ${u.fullName}`}
@@ -205,6 +313,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
+                    </div>
                   )}
                 </li>
               );
@@ -266,8 +375,8 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                 id="eq-senha"
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={6}
-                placeholder="Mínimo de 6 caracteres"
+                minLength={10}
+                placeholder="Mínimo de 10 caracteres, com letras e números"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className={`${estilos.campo} pr-12 font-mono`}
@@ -281,8 +390,37 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            <p className="mt-1 text-xs text-slate-600">Envie a senha ao pesquisador por um canal seguro.</p>
+            <p className="mt-1 text-xs text-slate-600">
+              É provisória: no primeiro acesso a pessoa é obrigada a criar uma senha própria.
+            </p>
           </div>
+
+          <fieldset>
+            <legend className={estilos.rotulo}>Nível de acesso</legend>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {PAPEIS_ORDEM.map((p) => (
+                <label
+                  key={p}
+                  className={`flex cursor-pointer flex-col rounded-2xl p-3 text-sm ring-1 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-folha-600 ${
+                    newRole === p ? 'bg-broto-100/60 ring-folha-600/40' : 'bg-papel/60 ring-transparent hover:bg-papel'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 font-semibold text-grafite">
+                    <input
+                      type="radio"
+                      name="eq-papel"
+                      value={p}
+                      checked={newRole === p}
+                      onChange={() => setNewRole(p)}
+                      className="h-4 w-4 accent-[var(--color-folha-700)]"
+                    />
+                    {PAPEIS[p].rotulo}
+                  </span>
+                  <span className="mt-1 text-xs text-slate-600">{PAPEIS[p].descricao}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </form>
       )}
 

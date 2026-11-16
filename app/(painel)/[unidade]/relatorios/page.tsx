@@ -11,7 +11,7 @@ import { codigoRelatorio, doisDigitos, rodiziosDoCiclo, situacaoRelatorio } from
 import { formatDateBR } from '@/lib/storage';
 
 export default function PaginaRelatorios() {
-  const { unidade, records, relatorios, currentCycle, hrefRelatorio, abrirRegistro, fotos } = useUnidade();
+  const { unidade, records, relatorios, currentCycle, hrefRelatorio, abrirRegistro, fotos, podeEditar } = useUnidade();
   const reduzir = useReducedMotion();
   const ciclos = Array.from(new Set([currentCycle, ...records.map((r) => r.cycleNumber)])).sort((a, b) => b - a);
   const [ciclo, setCiclo] = useState(currentCycle);
@@ -63,6 +63,7 @@ export default function PaginaRelatorios() {
       {rodizios.length === 0 ? (
         <div className="flex flex-col items-start gap-3 border-t border-folha-100 px-5 py-10 sm:px-7">
           <p className="text-sm text-slate-700">Nenhum rodízio no ciclo {ciclo} ainda. O primeiro relatório nasce do primeiro rodízio registrado.</p>
+          {podeEditar && (
           <button
             onClick={abrirRegistro}
             className="inline-flex min-h-10 items-center gap-2 rounded-full bg-folha-700 px-4 py-2 text-sm font-semibold text-white hover:bg-folha-800 cursor-pointer"
@@ -70,6 +71,7 @@ export default function PaginaRelatorios() {
             <Dices className="h-4 w-4" />
             Registrar instalação
           </button>
+          )}
         </div>
       ) : (
         // A lista segue o caminho do conjunto de sensores pelo SAF: cada item é uma mudança de posição.
@@ -135,7 +137,7 @@ export default function PaginaRelatorios() {
                       </>
                     )}
                     <span className="hidden text-sm font-medium text-folha-700 group-hover:underline sm:inline">
-                      {agendado ? 'Ver' : pendente ? 'Preencher' : 'Abrir'}
+                      {agendado ? 'Ver' : pendente && podeEditar ? 'Preencher' : 'Abrir'}
                     </span>
                   </div>
                 </Link>

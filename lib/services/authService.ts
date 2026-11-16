@@ -1,5 +1,6 @@
 import { AuthUser, AuthorizedUser } from '../types';
 import { apiRequest } from './apiClient';
+import type { Papel } from '../papeis';
 
 export { SUPERUSER_EMAIL } from '../constants';
 
@@ -83,7 +84,7 @@ class AuthService {
   public async addAuthorizedUser(data: {
     email: string;
     fullName: string;
-    role?: 'pesquisador' | 'superuser';
+    role: Papel;
     password?: string;
   }): Promise<{ success: boolean; error?: string; user?: AuthorizedUser }> {
     try {
@@ -107,6 +108,32 @@ class AuthService {
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : 'Erro ao remover pesquisador.' };
     }
+  }
+
+  /**
+   * Alteração feita pelo administrador: nível de acesso, suspensão ou nova senha provisória.
+   */
+  public async atualizarUsuario(
+    email: string,
+    mudancas: { role?: Papel; ativo?: boolean; novaSenha?: string }
+  ): Promise<AuthorizedUser> {
+    const { user } = await apiRequest<{ user: AuthorizedUser }>('/api/users', {
+      method: 'PATCH',
+      body: JSON.stringify({ email, ...mudancas }),
+    });
+    return user;
+  }
+
+  /**
+   * Troca a própria senha (obrigatória depois de uma senha provisória). Devolve o usuário atualizado.
+   */
+  public async trocarSenha(atual: string, nova: string): Promise<AuthUser> {
+    const { user } = await apiRequest<{ user: AuthUser }>('/api/auth/me/senha', {
+      method: 'POST',
+      body: JSON.stringify({ atual, nova }),
+    });
+    this.notifyListeners(user);
+    return user;
   }
 
   /**

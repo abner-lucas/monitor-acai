@@ -31,9 +31,10 @@ interface HistoryCrudProps {
   unidade: Unidade;
   relatorios: Map<string, Relatorio>;
   hrefRelatorio: (recordId: string, editar?: boolean) => string;
-  onOpenCreate: () => void;
-  onEditRecord: (record: RotationRecord) => void;
-  onDeleteRecord: (record: RotationRecord) => void;
+  /** Ausentes para quem só visualiza: os botões de criar, editar e excluir somem. */
+  onOpenCreate?: () => void;
+  onEditRecord?: (record: RotationRecord) => void;
+  onDeleteRecord?: (record: RotationRecord) => void;
   onSelectPosition: (positionId: number) => void;
 }
 
@@ -160,6 +161,7 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {onOpenCreate && (
           <button
             id="btn-adicionar-registro-tabela"
             onClick={onOpenCreate}
@@ -168,6 +170,7 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
             <PlusCircle className="w-4 h-4" />
             <span>Adicionar registro</span>
           </button>
+          )}
 
           <button
             id="btn-export-excel-table"
@@ -468,6 +471,8 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                             </Link>
                           );
                         })()}
+                        {onEditRecord && onDeleteRecord && (
+                        <>
                         <button
                           id={`btn-edit-${record.id}`}
                           onClick={() => onEditRecord(record)}
@@ -486,6 +491,8 @@ export const HistoryCrud: React.FC<HistoryCrudProps> = ({
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                        </>
+                        )}
                       </div>
                     </td>
                   </tr>

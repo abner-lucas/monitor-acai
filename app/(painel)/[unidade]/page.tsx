@@ -28,6 +28,7 @@ export default function PaginaPainel() {
     abrirAgendamento,
     abrirCicloCompleto,
     hrefRelatorio,
+    podeEditar,
   } = useUnidade();
 
   // Vindo do histórico ("ver no mapa"): rola até a planta selecionada.
@@ -48,13 +49,13 @@ export default function PaginaPainel() {
         activeRecord={activeRecord}
         availablePositions={availablePositions}
         scheduledRecord={scheduledRecord}
-        onRegistrar={abrirRegistro}
-        onAgendar={abrirAgendamento}
+        onRegistrar={podeEditar ? abrirRegistro : undefined}
+        onAgendar={podeEditar ? abrirAgendamento : undefined}
         relatorioAtivo={activeRecord ? relatorios.get(activeRecord.id) : undefined}
         codigoRelatorioAtivo={rodizioAtivo ? codigoRelatorio(unidade, currentCycle, rodizioAtivo.numero) : undefined}
         hrefRelatorioAtivo={activeRecord ? hrefRelatorio(activeRecord.id, !relatorios.has(activeRecord.id)) : undefined}
         onSelectPosition={focarNoMapa}
-        onOpenCycleComplete={abrirCicloCompleto}
+        onOpenCycleComplete={podeEditar ? abrirCicloCompleto : undefined}
       />
 
       <Revelar>
@@ -68,7 +69,7 @@ export default function PaginaPainel() {
           local={unidade.nome}
           selectedPositionId={selectedPositionId}
           onSelectPosition={(posId) => selecionarPosicao(posId === selectedPositionId ? null : posId)}
-          onOpenRaffle={activeRecord && !scheduledRecord ? abrirAgendamento : abrirRegistro}
+          onOpenRaffle={!podeEditar ? undefined : activeRecord && !scheduledRecord ? abrirAgendamento : abrirRegistro}
           onOpenReport={(recordId) => router.push(hrefRelatorio(recordId, !relatorios.has(recordId)))}
         />
       </Revelar>

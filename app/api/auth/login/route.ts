@@ -1,37 +1,43 @@
-import bcrypt from 'bcryptjs';
 import { NextResponse, type NextRequest } from 'next/server';
-import { findUserByEmail, toAuthUser } from '@/lib/server/auth';
-import { handleRouteError, jsonError, readJsonBody } from '@/lib/server/http';
+import { bloqueioDeSenha, findUserByEmail, limparFalhas, registrarFalha, senhaConfere, toAuthUser } from '@/lib/server/auth';
+import { handleRouteError, ipDaRequisicao, jsonError, origemInvalida, readJsonBody } from '@/lib/server/http';
 import { setSessionCookie } from '@/lib/server/session';
+
+/** Mesma resposta para email desconhecido e senha errada: não revela quem tem acesso. */
+const CREDENCIAIS_INVALIDAS =
+  'Email ou senha incorretos. Se esqueceu a senha, peça ao coordenador Ábner Lucas (abner.lucas@ifpa.edu.br) para redefinir.';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await readJsonBody(request);
-    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-    const password = typeof body.password === 'string' ? body.password : '';
+    const recusa = origemInvalida(request);
+    if (recusa) return recusa;
 
+    const body = await readJsonBody(request);
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase().slice(0, 255) : '';
+    const password = typeof body.password === 'string' ? body.password.slice(0, 200) : '';
     if (!email || !password) {
       return jsonError(400, 'Por favor, informe o email e a senha de acesso.');
     }
 
+    const ip = ipDaRequisicao(request);
+    const espera = bloqueioDeSenha(ip, email);
+    if (espera > 0) {
+      return jsonError(429, `Muitas tentativas de senha. Tente de novo em ${espera} min.`);
+    }
+
     const user = await findUserByEmail(email);
-    if (!user) {
-      return jsonError(
-        401,
-        'Acesso negado: Este email não está na lista de pesquisadores autorizados. Solicite liberação ao coordenador Ábner Lucas (abner.lucas@ifpa.edu.br).'
-      );
+    if (!(await senhaConfere(password, user))) {
+      registrarFalha(ip, email);
+      return jsonError(401, CREDENCIAIS_INVALIDAS);
+    }
+    // Só depois da senha certa: não revela se o email existe.
+    if (!user!.is_active) {
+      return jsonError(403, 'Acesso suspenso: este usuário foi desativado pelo coordenador do projeto.');
     }
 
-    if (!user.is_active) {
-      return jsonError(403, 'Acesso suspenso: Este usuário foi desativado temporariamente pelo coordenador do projeto.');
-    }
-
-    if (!(await bcrypt.compare(password, user.password_hash))) {
-      return jsonError(401, 'Senha incorreta. Verifique os caracteres digitados ou solicite redefinição ao coordenador.');
-    }
-
-    const response = NextResponse.json({ user: toAuthUser(user) });
-    setSessionCookie(response, user.id);
+    limparFalhas(email);
+    const response = NextResponse.json({ user: toAuthUser(user!) });
+    setSessionCookie(response, user!.id, user!.session_version);
     return response;
   } catch (err) {
     return handleRouteError(err);

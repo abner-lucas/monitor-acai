@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { handleRouteError, jsonError, readJsonBody, requireUser, unidadeDaRequisicao } from '@/lib/server/http';
+import { handleRouteError, jsonError, readJsonBody, requireEditor, unidadeDaRequisicao } from '@/lib/server/http';
 import { agendarProxima, registrarRodizio } from '@/lib/server/rotations';
 
 /**
@@ -9,7 +9,7 @@ import { agendarProxima, registrarRodizio } from '@/lib/server/rotations';
  */
 export async function POST(request: NextRequest) {
   try {
-    const guard = await requireUser(request);
+    const guard = await requireEditor(request);
     if (guard.response) return guard.response;
 
     const unidade = unidadeDaRequisicao(request);

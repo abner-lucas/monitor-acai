@@ -4,6 +4,7 @@ import { DriveErro, DriveNaoConectado } from './drive';
 import { getSessionUser } from './auth';
 import type { AuthUser } from '../types';
 import { isUnidade, type UnidadeId } from '../unidades';
+import { podeEditar } from '../papeis';
 
 /** Erro de dados enviados pelo cliente; vira resposta 400 com a própria mensagem. */
 export class ValidationError extends Error {}
@@ -44,19 +45,57 @@ export async function readJsonBody(request: NextRequest): Promise<Record<string,
   return body as Record<string, unknown>;
 }
 
+/** IP do visitante (atrás do proxy da Hostinger), para o limite de tentativas de senha. */
+export function ipDaRequisicao(request: NextRequest): string {
+  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'desconhecido';
+}
+
+/**
+ * Pedidos que alteram dados só valem vindos do próprio site (defesa extra contra CSRF,
+ * além do cookie SameSite=Lax). Navegadores sempre mandam Origin nesses pedidos.
+ */
+export function origemInvalida(request: NextRequest): NextResponse | null {
+  if (request.method === 'GET' || request.method === 'HEAD') return null;
+  const origem = request.headers.get('origin');
+  if (!origem) return null;
+  try {
+    if (new URL(origem).host === new URL(origemPublica(request)).host) return null;
+  } catch {
+    // Origin malformado: recusa abaixo.
+  }
+  return jsonError(403, 'Pedido recusado: origem não autorizada.');
+}
+
 type Guard = { user: AuthUser; response?: undefined } | { user?: undefined; response: NextResponse };
 
+/**
+ * Usuário logado. Enquanto estiver com senha provisória, só pode trocar a senha
+ * (rotas /api/auth/me e /api/auth/me/senha não passam por aqui).
+ */
 export async function requireUser(request: NextRequest): Promise<Guard> {
+  const recusa = origemInvalida(request);
+  if (recusa) return { response: recusa };
   const user = await getSessionUser(request);
   if (!user) return { response: jsonError(401, 'Sessão expirada. Entre novamente para continuar.') };
+  if (user.trocarSenha) return { response: jsonError(403, 'Troque a senha provisória antes de continuar.') };
   return { user };
+}
+
+/** Quem lança dados: administrador ou lançamento de dados (o visualizador só consulta). */
+export async function requireEditor(request: NextRequest): Promise<Guard> {
+  const guard = await requireUser(request);
+  if (guard.response) return guard;
+  if (!podeEditar(guard.user.role)) {
+    return { response: jsonError(403, 'Seu acesso é só de visualização: peça ao administrador para lançar ou alterar dados.') };
+  }
+  return guard;
 }
 
 export async function requireSuperuser(request: NextRequest): Promise<Guard> {
   const guard = await requireUser(request);
   if (guard.response) return guard;
   if (guard.user.role !== 'superuser') {
-    return { response: jsonError(403, 'Apenas o coordenador do projeto pode gerenciar pesquisadores.') };
+    return { response: jsonError(403, 'Apenas administradores podem fazer isso.') };
   }
   return guard;
 }

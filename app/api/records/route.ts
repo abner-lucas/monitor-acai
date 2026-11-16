@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { handleRouteError, readJsonBody, requireUser, unidadeDaRequisicao } from '@/lib/server/http';
+import { handleRouteError, readJsonBody, requireUser, unidadeDaRequisicao, requireEditor } from '@/lib/server/http';
 import { createRecord, listRecords } from '@/lib/server/records';
 
 export async function GET(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const guard = await requireUser(request);
+    const guard = await requireEditor(request);
     if (guard.response) return guard.response;
 
     const record = await createRecord(unidadeDaRequisicao(request), await readJsonBody(request));

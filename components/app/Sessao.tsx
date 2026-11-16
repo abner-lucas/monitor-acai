@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { AuthUser } from '@/lib/types';
 import { authService } from '@/lib/services/authService';
 import { LoginScreen } from '@/components/LoginScreen';
+import { TelaTrocarSenha } from '@/components/TrocarSenha';
 import { ToastContainer, ToastMessage, ToastType } from '@/components/Toast';
 
 interface ContextoSessao {
@@ -83,7 +84,24 @@ export function Sessao({ children }: { children: React.ReactNode }) {
         <LoginScreen
           onAuthSuccess={(user) => {
             setUsuario(user);
-            aviso('success', 'Acesso Autorizado', `Bem-vindo(a), ${user.fullName || user.email}!`);
+            if (!user.trocarSenha) aviso('success', 'Acesso Autorizado', `Bem-vindo(a), ${user.fullName || user.email}!`);
+          }}
+        />
+      </>
+    );
+  }
+
+  // Senha provisória (cadastro novo ou redefinida pelo administrador): troca antes de ver o painel.
+  if (usuario.trocarSenha) {
+    return (
+      <>
+        <ToastContainer toasts={avisos} onDismiss={removerAviso} />
+        <TelaTrocarSenha
+          usuario={usuario}
+          onSair={sair}
+          onTrocada={(user) => {
+            setUsuario(user);
+            aviso('success', 'Senha criada', `Bem-vindo(a), ${user.fullName || user.email}!`);
           }}
         />
       </>
