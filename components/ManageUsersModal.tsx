@@ -275,7 +275,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                       value={u.role}
                       disabled={travado}
                       onChange={(e) => alterar(u, { role: e.target.value as Papel }, `${u.fullName}: ${PAPEIS[e.target.value as Papel].rotulo.toLowerCase()}`)}
-                      className="min-h-10 max-w-[11rem] rounded-full bg-white px-3 text-sm text-grafite ring-1 ring-papel-linha outline-hidden focus:ring-2 focus:ring-folha-600 disabled:opacity-60"
+                      className="min-h-10 rounded-full bg-white px-3 text-sm text-grafite ring-1 ring-papel-linha outline-hidden focus:ring-2 focus:ring-folha-600 disabled:opacity-60"
                     >
                       {PAPEIS_ORDEM.map((p) => (
                         <option key={p} value={p}>
@@ -322,7 +322,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
         ))}
 
       {activeTab === 'add' && (
-        <form id="form-pesquisador" onSubmit={handleAddUser} className="space-y-4">
+        <form id="form-pesquisador" onSubmit={handleAddUser} autoComplete="off" className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label htmlFor="eq-nome" className={estilos.rotulo}>
@@ -331,6 +331,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
               <input
                 id="eq-nome"
                 required
+                autoComplete="off"
                 placeholder="Ex.: Maria Santos"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
@@ -345,6 +346,8 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                 id="eq-email"
                 type="email"
                 required
+                // Sem preenchimento automático: o navegador colocava ali o email e a senha do próprio administrador.
+                autoComplete="off"
                 placeholder="nome@ifpa.edu.br"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
@@ -375,6 +378,7 @@ function Conteudo({ onClose, onShowToast }: Omit<ManageUsersModalProps, 'isOpen'
                 id="eq-senha"
                 type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="new-password"
                 minLength={10}
                 placeholder="Mínimo de 10 caracteres, com letras e números"
                 value={newPassword}
