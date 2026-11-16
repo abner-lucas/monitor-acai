@@ -568,7 +568,7 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="font-display font-semibold text-grafite text-base sm:text-lg">
-                    Célula {selectedPosition.cellId} • Planta {selectedPosition.plantIndex} (Posição {selectedPosition.formattedId})
+                    Célula {selectedPosition.cellId} • Planta {selectedPosition.plantIndex}
                   </h4>
                   {selectedPositionStatus === 'active' && (
                     <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
@@ -592,9 +592,9 @@ export const SafVisualMap: React.FC<SafVisualMapProps> = ({
                   )}
                 </div>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Célula {selectedPosition.cellId} ({CELLS_METADATA.find(c => c.id === selectedPosition.cellId)?.name}) • Planta {selectedPosition.plantIndex}
-                  {selectedPositionRecord && (selectedPositionStatus === 'scheduled' ? ` • Troca prevista em: ${formatDateBR(selectedPositionRecord.installedAt)}` : ` • Instalado em: ${formatDateBR(selectedPositionRecord.installedAt)}`)}
-                  {selectedPositionRecord?.removedAt && ` • Coletado em: ${formatDateBR(selectedPositionRecord.removedAt)}`}
+                  Posição {selectedPosition.formattedId}
+                  {selectedPositionRecord && (selectedPositionStatus === 'scheduled' ? ` • Troca prevista em ${formatDateBR(selectedPositionRecord.installedAt)}` : ` • Instalado em ${formatDateBR(selectedPositionRecord.installedAt)}`)}
+                  {selectedPositionRecord?.removedAt && ` • Coletado em ${formatDateBR(selectedPositionRecord.removedAt)}`}
                 </p>
               </div>
             </div>

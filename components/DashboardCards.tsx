@@ -3,7 +3,6 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import {
-  MapPin,
   FileText,
   Dices,
   AlertTriangle,
@@ -12,7 +11,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { CycleStats, PositionInfo, RotationRecord } from '@/lib/types';
-import { getPositionById, CELLS_METADATA, DAYS_PER_ROTATION } from '@/lib/constants';
+import { getPositionById, DAYS_PER_ROTATION } from '@/lib/constants';
 import Link from 'next/link';
 import { calculateDaysRemaining, formatDateBR } from '@/lib/storage';
 import type { Relatorio } from '@/lib/relatorio';
@@ -118,7 +117,6 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
   const activePosition = activeRecord ? getPositionById(activeRecord.positionId) : null;
   const proximaPos = scheduledRecord ? getPositionById(scheduledRecord.positionId) : null;
   const diasProxima = scheduledRecord ? calculateDaysRemaining(scheduledRecord.installedAt) : 0;
-  const activeCellMeta = activePosition ? CELLS_METADATA.find((c) => c.id === activePosition.cellId) : null;
 
   const daysLeft = stats.daysRemainingInCurrentPosition;
   let tom: Tom = 'ok';
@@ -196,10 +194,6 @@ export const DashboardCards: React.FC<DashboardCardsProps> = ({
                   <h3 className="font-display text-xl font-semibold leading-tight text-white">
                     Célula {activePosition.cellId} · Planta {activePosition.plantIndex}
                   </h3>
-                  <p className="mt-0.5 flex items-center gap-1 text-sm text-acai-100/80">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {activeCellMeta?.name || 'Açaizal IFPA Breves'}
-                  </p>
                 </div>
               </div>
 
